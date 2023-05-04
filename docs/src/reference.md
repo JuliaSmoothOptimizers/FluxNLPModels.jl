@@ -1,4 +1,4 @@
-# Reference
+<!-- # Reference
 ​
 ## Contents
 ​
@@ -14,4 +14,4 @@ Pages = ["reference.md"]
 ​
 ```@autodocs
 Modules = [KnetNLPModels]
-```
+``` -->

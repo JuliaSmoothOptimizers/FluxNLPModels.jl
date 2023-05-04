@@ -1,4 +1,4 @@
-# KnetNLPModels.jl Tutorial
+<!-- # KnetNLPModels.jl Tutorial
 
 ## Preliminaries
 This step-by-step example assume prior knowledge of [julia](https://julialang.org/) and [Knet.jl](https://github.com/denizyuret/Knet.jl.git).
@@ -123,4 +123,4 @@ The size of the training and test minibatch can be set to `1/p` the size of the 
 ```@example KnetNLPModel
 p = 120
 set_size_minibatch!(DenseNetNLPModel, p) # p::Int > 1
-```
+``` -->
