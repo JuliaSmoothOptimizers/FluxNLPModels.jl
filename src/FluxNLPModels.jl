@@ -32,12 +32,12 @@ A FluxNLPModel has fields
 * `w` is the vector of weights/variables;
 # * `layers_g` is a nested array used for internal purposes;
 """
-mutable struct FluxNLPModel{T, S, C <: Chain, V} <: AbstractFluxNLPModel{T, S}
+mutable struct FluxNLPModel{T, S, C <: Chain, V, F<:Function} <: AbstractFluxNLPModel{T, S}
   meta::NLPModelMeta{T, S}
   chain::C
   counters::Counters
   data_train
-  loss_f #TODO how do I put function here
+  loss_f::F #TODO how do I put function here
   data_test
   size_minibatch::Int
   training_minibatch_iterator

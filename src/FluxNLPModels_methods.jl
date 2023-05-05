@@ -27,7 +27,7 @@ function NLPModels.grad!(
   
   x,y = nlp.current_training_minibatch #TODO check this
   param = Flux.params(nlp.chain) # model's trainable parameters, #TODO I need to improve this 
-  gs = gradient(() -> nlp.loss(nlp.chain(x), y), param) # compute gradient
+  gs = gradient(() -> nlp.loss(nlp.chain(x), y), param) # compute gradient #TODO loss_f
   
   for p in param
       buff , re  = Flux.destructure(gs[p])

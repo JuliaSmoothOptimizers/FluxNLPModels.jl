@@ -128,7 +128,7 @@ function set_vars!(
   new_w::AbstractVector{T},
 ) where {T <: Number, S}
 
-  #Flattening 
+  #Flattening #TODO do it just once
   old_w, rebuild = Flux.destructure(model.chain)
   # model two
   model.chain = rebuild(new_w)
