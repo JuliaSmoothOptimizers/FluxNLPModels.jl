@@ -1,8 +1,9 @@
-module KnetNLPModels
+module FluxNLPModels
 
-using Knet, NLPModels
+using Flux, NLPModels
+#TODO use Flux:Data vs MLUtils
 export Chain
-export AbstractKnetNLPModel, KnetNLPModel
+export AbstractFluxNLPModel, FluxNLPModel
 export vector_params, accuracy
 export reset_minibatch_train!, rand_minibatch_train!, minibatch_next_train!, set_size_minibatch!
 export reset_minibatch_test!, rand_minibatch_test!, minibatch_next_test!
@@ -29,14 +30,14 @@ A FluxNLPModel has fields
 * `current_training_minibatch` is the training minibatch used to evaluate the neural network;
 * `current_minibatch_test` is the current test minibatch, it is not used in practice;
 * `w` is the vector of weights/variables;
-* `layers_g` is a nested array used for internal purposes;
-* `nested_array` is a vector of `Array{T,N}`; its shape matches that of `chain`.
+# * `layers_g` is a nested array used for internal purposes;
 """
 mutable struct FluxNLPModel{T, S, C <: Chain, V} <: AbstractFluxNLPModel{T, S}
   meta::NLPModelMeta{T, S}
   chain::C
   counters::Counters
   data_train
+  loss_f #TODO how do I put function here
   data_test
   size_minibatch::Int
   training_minibatch_iterator
@@ -44,22 +45,22 @@ mutable struct FluxNLPModel{T, S, C <: Chain, V} <: AbstractFluxNLPModel{T, S}
   current_training_minibatch
   current_test_minibatch
   w::S
-  layers_g::Vector{Param}
-  nested_array::V
+  re # TODO the recosntruct or should I re do it on the fly ?
   i_train::Int
   i_test::Int
 end
 
+#TODO this function
 """
     FluxNLPModel(chain_ANN; size_minibatch=100, data_train=MLDatasets.MNIST.traindata(Float32), data_test=MLDatasets.MNIST.testdata(Float32))
 
 Build a `FluxNLPModel` from the neural network represented by `chain_ANN`.
-`chain_ANN` is built using [Flux.jl](https://github.com/denizyuret/Knet.jl), see the [tutorial](https://JuliaSmoothOptimizers.github.io/KnetNLPModels.jl/dev/tutorial/) for more details.
+`chain_ANN` is built using [Flux.jl](#TODO) for more details.
 The other data required are: an iterator over the training dataset `data_train`, an iterator over the test dataset `data_test` and the size of the minibatch `size_minibatch`.
-Suppose `(xtrn,ytrn) = knetnlp.data_train`, then the size of each training minibatch will be `1/size_minibatch * length(ytrn)`.
+Suppose `(xtrn,ytrn) = Fluxnlp.data_train`, then the size of each training minibatch will be `1/size_minibatch * length(ytrn)`.
 By default, the other data are respectively set to the training dataset and test dataset of `MLDatasets.MNIST`, with each minibatch a hundredth of the dataset.
  """
-function KnetNLPModel(
+function FluxNLPModel(
   chain_ANN::T;
   size_minibatch::Int = 100,
   data_train = begin
@@ -89,7 +90,7 @@ function KnetNLPModel(
   nested_array = build_nested_array_from_vec(chain_ANN, x0)
   layers_g = similar(params(chain_ANN)) # create a Vector of layer variables
 
-  return KnetNLPModel(
+  return FluxNLPModel(
     meta,
     chain_ANN,
     Counters(),
@@ -109,21 +110,21 @@ function KnetNLPModel(
 end
 
 """
-    set_size_minibatch!(knetnlp::AbstractKnetNLPModel, size_minibatch::Int)
+    set_size_minibatch!(Fluxnlp::AbstractFluxNLPModel, size_minibatch::Int)
 
-Change the size of both training and test minibatches of the `knetnlp`.
-Suppose `(xtrn,ytrn) = knetnlp.data_train`, then the size of each training minibatch will be `1/size_minibatch * length(ytrn)`; the test minibatch follows the same logic.
-After a call of `set_size_minibatch!`, you must call `reset_minibatch_train!(knetnlp)` to use a minibatch of the expected size.
+Change the size of both training and test minibatches of the `Fluxnlp`.
+Suppose `(xtrn,ytrn) = Fluxnlp.data_train`, then the size of each training minibatch will be `1/size_minibatch * length(ytrn)`; the test minibatch follows the same logic.
+After a call of `set_size_minibatch!`, you must call `reset_minibatch_train!(Fluxnlp)` to use a minibatch of the expected size.
 """
-function set_size_minibatch!(knetnlp::AbstractKnetNLPModel, size_minibatch::Int)
-  knetnlp.size_minibatch = size_minibatch
-  knetnlp.training_minibatch_iterator =
-    create_minibatch(knetnlp.data_train[1], knetnlp.data_train[2], knetnlp.size_minibatch)
-  knetnlp.test_minibatch_iterator =
-    create_minibatch(knetnlp.data_test[1], knetnlp.data_test[2], knetnlp.size_minibatch)
-  return knetnlp
+function set_size_minibatch!(Fluxnlp::AbstractFluxNLPModel, size_minibatch::Int)
+  Fluxnlp.size_minibatch = size_minibatch
+  Fluxnlp.training_minibatch_iterator =
+    create_minibatch(Fluxnlp.data_train[1], Fluxnlp.data_train[2], Fluxnlp.size_minibatch)
+  Fluxnlp.test_minibatch_iterator =
+    create_minibatch(Fluxnlp.data_test[1], Fluxnlp.data_test[2], Fluxnlp.size_minibatch)
+  return Fluxnlp
 end
 
 include("utils.jl")
-include("KnetNLPModels_methods.jl")
+include("FluxNLPModels_methods.jl")
 end
