@@ -30,15 +30,14 @@ A FluxNLPModel has fields
 * `current_training_minibatch` is the training minibatch used to evaluate the neural network;
 * `current_minibatch_test` is the current test minibatch, it is not used in practice;
 * `w` is the vector of weights/variables;
-# * `layers_g` is a nested array used for internal purposes;
 """
 mutable struct FluxNLPModel{T, S, C <: Chain, V, F<:Function} <: AbstractFluxNLPModel{T, S}
   meta::NLPModelMeta{T, S}
   chain::C
   counters::Counters
   data_train
-  loss_f::F #TODO how do I put function here
   data_test
+  loss_f::F #TODO how do I put function here
   size_minibatch::Int
   training_minibatch_iterator
   test_minibatch_iterator
@@ -46,8 +45,6 @@ mutable struct FluxNLPModel{T, S, C <: Chain, V, F<:Function} <: AbstractFluxNLP
   current_test_minibatch
   w::S
   re # TODO the recosntruct or should I re do it on the fly ?
-  i_train::Int
-  i_test::Int
 end
 
 #TODO this function
@@ -63,32 +60,27 @@ By default, the other data are respectively set to the training dataset and test
 function FluxNLPModel(
   chain_ANN::T;
   size_minibatch::Int = 100,
-  data_train = begin
-    (xtrn, ytrn) = MNIST.traindata(Float32)
-    ytrn[ytrn .== 0] .= 10
-    (xtrn, ytrn)
-  end,
-  data_test = begin
-    (xtst, ytst) = MNIST.testdata(Float32)
-    ytst[ytst .== 0] .= 10
-    (xtst, ytst)
-  end,
+  data_train,
+  data_test,
+  loss_f::f=Flux.crossentropy,
 ) where {T <: Chain}
   x0 = vector_params(chain_ANN)
   n = length(x0)
   meta = NLPModelMeta(n, x0 = x0)
+  if (isempty(data_train) || isempty(data_test) )
+    error("train data or test is empty")
+  end  
 
   xtrn = data_train[1]
   ytrn = data_train[2]
   xtst = data_test[1]
   ytst = data_test[2]
+  
   training_minibatch_iterator = create_minibatch(xtrn, ytrn, size_minibatch)
   test_minibatch_iterator = create_minibatch(xtst, ytst, size_minibatch)
-  current_training_minibatch = rand(training_minibatch_iterator)
+  current_training_minibatch = rand(training_minibatch_iterator) #TODO add document that user has to pass in the current minibatch
   current_test_minibatch = rand(test_minibatch_iterator)
 
-  nested_array = build_nested_array_from_vec(chain_ANN, x0)
-  layers_g = similar(params(chain_ANN)) # create a Vector of layer variables
 
   return FluxNLPModel(
     meta,
@@ -97,33 +89,15 @@ function FluxNLPModel(
     data_train,
     data_test,
     size_minibatch,
+    loss_f,
     training_minibatch_iterator,
     test_minibatch_iterator,
     current_training_minibatch,
     current_test_minibatch,
-    x0,
-    layers_g,
-    nested_array,
-    1, #initialize the batch current i to 1
-    1,
-  )
+    x0
+    )
 end
 
-"""
-    set_size_minibatch!(Fluxnlp::AbstractFluxNLPModel, size_minibatch::Int)
-
-Change the size of both training and test minibatches of the `Fluxnlp`.
-Suppose `(xtrn,ytrn) = Fluxnlp.data_train`, then the size of each training minibatch will be `1/size_minibatch * length(ytrn)`; the test minibatch follows the same logic.
-After a call of `set_size_minibatch!`, you must call `reset_minibatch_train!(Fluxnlp)` to use a minibatch of the expected size.
-"""
-function set_size_minibatch!(Fluxnlp::AbstractFluxNLPModel, size_minibatch::Int)
-  Fluxnlp.size_minibatch = size_minibatch
-  Fluxnlp.training_minibatch_iterator =
-    create_minibatch(Fluxnlp.data_train[1], Fluxnlp.data_train[2], Fluxnlp.size_minibatch)
-  Fluxnlp.test_minibatch_iterator =
-    create_minibatch(Fluxnlp.data_test[1], Fluxnlp.data_test[2], Fluxnlp.size_minibatch)
-  return Fluxnlp
-end
 
 include("utils.jl")
 include("FluxNLPModels_methods.jl")

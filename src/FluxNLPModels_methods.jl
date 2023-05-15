@@ -5,7 +5,7 @@ Evaluate `f(x)`, the objective function of `nlp` at `x`.
 """
 function NLPModels.obj(nlp::AbstractFluxNLPModel{T, S}, w::AbstractVector{T}) where {T, S}
   increment!(nlp, :neval_obj)
-  set_vars!(nlp, w)
+  set_vars!(nlp, w) #TODO ask orban
   #TODO check If I need to reconstruct it 
   f_w = nlp.chain(nlp.current_training_minibatch)
   return f_w
@@ -25,8 +25,8 @@ function NLPModels.grad!(
   increment!(nlp, :neval_grad)
   set_vars!(nlp, w)  #TODO does it update it ? or does it do   m = rebuild(flat) # we can rebuild with a new weights here we use flat wigth
   
-  x,y = nlp.current_training_minibatch #TODO check this
-  param = Flux.params(nlp.chain) # model's trainable parameters, #TODO I need to improve this 
+  x, y = nlp.current_training_minibatch #TODO check this
+  param = Flux.params(nlp.chain) # model's trainable parameters, #TODO DO I need it here or ? I need to improve this 
   gs = gradient(() -> nlp.loss(nlp.chain(x), y), param) # compute gradient #TODO loss_f
   
   for p in param
