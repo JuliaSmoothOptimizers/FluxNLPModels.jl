@@ -36,7 +36,7 @@ mutable struct FluxNLPModel{T, S, C <: Chain, V, F <: Function} <: AbstractFluxN
   counters::Counters
   data_train
   data_test
-  loss_f::F 
+  loss_f::F
   size_minibatch::Int
   training_minibatch_iterator
   test_minibatch_iterator
@@ -60,7 +60,7 @@ function FluxNLPModel(
   size_minibatch::Int = 100,
   loss_f::F = Flux.crossentropy,
 ) where {T <: Chain, F <: Function}
-  x0,re = Flux.destructure(chain_ANN)
+  x0, re = Flux.destructure(chain_ANN)
   n = length(x0)
   meta = NLPModelMeta(n, x0 = x0)
   if (isempty(data_train) || isempty(data_test))

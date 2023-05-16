@@ -13,7 +13,7 @@
   "related_identifiers": [
     {
       "scheme": "url",
-      "identifier": "https://github.com/Farhad-phd/FluxNLPModels",
+      "identifier": "https://github.com/Farhad-phd/FluxNLPModels.jl",
       "relation": "isSupplementTo"
     }
   ]

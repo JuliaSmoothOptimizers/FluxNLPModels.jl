@@ -1,6 +1,6 @@
 name = "FluxNLPModels"
-uuid = "3dcc2932-5bc2-437b-87b2-3b153cf2a08c"
-authors = ["Farhad Rahbarnia <farhadrclass@gmail.com>"]
+uuid = "872abebc-2c0b-4005-be13-c3c8b8fd207d"
+authors = ["Farhad Rahbarnia <farhad.rahbarnia@polymtl.ca>"]
 version = "0.0.1"
 
 [deps]

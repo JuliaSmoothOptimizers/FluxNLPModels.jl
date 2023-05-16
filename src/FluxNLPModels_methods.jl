@@ -14,7 +14,7 @@ function NLPModels.obj(nlp::AbstractFluxNLPModel{T, S}, w::AbstractVector{T}) wh
   increment!(nlp, :neval_obj)
   set_vars!(nlp, w)
   f_w = nlp.chain(nlp.current_training_minibatch)
-  return f_w 
+  return f_w
 end
 
 """
