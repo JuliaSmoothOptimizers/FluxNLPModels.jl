@@ -58,7 +58,9 @@ function set_vars!(
 end
 
 """
-#TODO
+    flat_grad!(nlp,g)
+
+    calculate the gradient and return 1 dimentional vector 
 # Arguments
 - `nlp::AbstractFluxNLPModel{T, S}`: the FluxNLPModel data struct
 - `w::AbstractVector{T}`: is the vector of weights/variables;
@@ -79,6 +81,3 @@ function flat_grad!(nlp::AbstractFluxNLPModel{T, S}, g::AbstractVector{T}) where
   end
   return g
 end
-
-#TODO 
-#TODO https://github.com/JuliaSmoothOptimizers/DCISolver.jl/blob/main/Project.toml
