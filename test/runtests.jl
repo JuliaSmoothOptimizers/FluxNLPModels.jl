@@ -1,8 +1,8 @@
 using Test
-using CUDA, Flux, NLPModels
 using FluxNLPModels
+using CUDA, Flux, NLPModels
 using Statistics
-using Flux.Data: DataLoader
+using Flux.Data: DataLoader #TODO update this
 using Flux: onehotbatch, onecold, @epochs
 using Flux.Losses: logitcrossentropy
 using Base: @kwdef
@@ -23,15 +23,16 @@ function getdata(args, device)
   # One-hot-encode the labels
   ytrain, ytest = onehotbatch(ytrain, 0:9), onehotbatch(ytest, 0:9)
 
-  # Create DataLoaders (mini-batch iterators)
+  # Create DataLoaders (mini-batch iterators) #TODO it is passed down
   train_loader = DataLoader((xtrain, ytrain), batchsize = args.batchsize, shuffle = true)
   test_loader = DataLoader((xtest, ytest), batchsize = args.batchsize)
 
+  # return (xtrain, ytrain) , (xtest, ytest)
   return train_loader, test_loader
 end
 
 function build_model(; imgsize = (28, 28, 1), nclasses = 10)
-  return Chain(Dense(prod(imgsize), 32, relu), Dense(32, nclasses))
+  return Flux.Chain(Dense(prod(imgsize), 32, relu), Dense(32, nclasses))
 end
 
 @kwdef mutable struct Args
@@ -43,23 +44,25 @@ end
 
 args = Args() # collect options in a struct for convenience
 
-if CUDA.functional() && args.use_cuda
-  @info "Training on CUDA GPU"
-  CUDA.allowscalar(false)
-  device = gpu
-else
-  @info "Training on CPU"
-  device = cpu
-end
+# if CUDA.functional() && args.use_cuda
+#   @info "testing on CUDA GPU"
+#   CUDA.allowscalar(false)
+#   device = gpu
+# else
+#   @info "testing on CPU"
+#   device = cpu
+# end
+
+device = cpu #TODO should we test on GPU?
 
 @testset "FluxNLPModels tests" begin
 
   # Create test and train dataloaders
-  train_loader, test_loader = getdata(args, device)
+  train_data, test_data = getdata(args, device)
 
   # Construct model
   DN = build_model() |> device
-  DNNLPModel = FluxNLPModel(DN, data_train = train_loader, data_test = test_loader)
+  DNNLPModel = FluxNLPModel(DN, train_data,  test_data)
 
   old_w, rebuild = Flux.destructure(DN)
   @test DNNLPModel.w == old_w

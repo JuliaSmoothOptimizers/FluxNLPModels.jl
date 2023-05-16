@@ -2,18 +2,18 @@ module FluxNLPModels
 
 using Flux, NLPModels
 #TODO use Flux:Data vs MLUtils
-export Chain
+# export Chain
 export AbstractFluxNLPModel, FluxNLPModel
 export flat_grad!
 export reset_minibatch_train!, reset_minibatch_test!
 export create_minibatch, set_vars!
 
-abstract type Chain end
+# abstract type Chain end
 
 abstract type AbstractFluxNLPModel{T, S} <: AbstractNLPModel{T, S} end
 
 """ 
-    FluxNLPModel{T, S, C <: Chain} <: AbstractNLPModel{T, S}
+    FluxNLPModel{T, S, C <: Flux.Chain} <: AbstractNLPModel{T, S}
 
 Data structure that makes the interfaces between neural networks defined with [Flux.jl](https://fluxml.ai/) and [NLPModels](https://github.com/JuliaSmoothOptimizers/NLPModels.jl).
 A FluxNLPModel has fields
@@ -30,7 +30,7 @@ A FluxNLPModel has fields
 - `current_minibatch_test` is the current test minibatch, it is not used in practice;
 - `w` is the vector of weights/variables;
 """
-mutable struct FluxNLPModel{T, S, C <: Chain, V, F <: Function} <: AbstractFluxNLPModel{T, S}
+mutable struct FluxNLPModel{T, S, C <: Flux.Chain, V, F <: Function} <: AbstractFluxNLPModel{T, S}
   meta::NLPModelMeta{T, S}
   chain::C
   counters::Counters
@@ -59,7 +59,7 @@ function FluxNLPModel(
   data_test;
   size_minibatch::Int = 100,
   loss_f::F = Flux.crossentropy,
-) where {T <: Chain, F <: Function}
+) where {T <: Flux.Chain, F <: Function}
   x0, re = Flux.destructure(chain_ANN)
   n = length(x0)
   meta = NLPModelMeta(n, x0 = x0)
@@ -67,13 +67,19 @@ function FluxNLPModel(
     error("train data or test is empty")
   end
 
-  xtrn = data_train[1]
-  ytrn = data_train[2]
-  xtst = data_test[1]
-  ytst = data_test[2]
+  #TODO we should decide if we want the minibatch to be created here to pass down, I prefere pass down
+  # xtrn = data_train[1]
+  # ytrn = data_train[2]
 
-  training_minibatch_iterator = create_minibatch(xtrn, ytrn, size_minibatch)
-  test_minibatch_iterator = create_minibatch(xtst, ytst, size_minibatch)
+  # xtst = data_test[1]
+  # ytst = data_test[2]
+
+  # training_minibatch_iterator = create_minibatch(xtrn, ytrn, size_minibatch)
+  # test_minibatch_iterator = create_minibatch(xtst, ytst, size_minibatch)
+
+  #pass by user 
+  training_minibatch_iterator = data_train
+  test_minibatch_iterator = data_test
   current_training_minibatch = first(training_minibatch_iterator) #TODO add document that user has to pass in the current minibatch
   current_test_minibatch = first(test_minibatch_iterator)
 
