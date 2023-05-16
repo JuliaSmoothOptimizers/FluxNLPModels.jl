@@ -12,7 +12,7 @@ abstract type Chain end
 
 abstract type AbstractFluxNLPModel{T, S} <: AbstractNLPModel{T, S} end
 
-"""
+""" 
     FluxNLPModel{T, S, C <: Chain} <: AbstractNLPModel{T, S}
 
 Data structure that makes the interfaces between neural networks defined with [Flux.jl](https://fluxml.ai/) and [NLPModels](https://github.com/JuliaSmoothOptimizers/NLPModels.jl).
@@ -60,7 +60,7 @@ function FluxNLPModel(
   size_minibatch::Int = 100,
   loss_f::F = Flux.crossentropy,
 ) where {T <: Chain, F <: Function}
-  x0 = vector_params(chain_ANN)
+  x0,re = Flux.destructure(chain_ANN)
   n = length(x0)
   meta = NLPModelMeta(n, x0 = x0)
   if (isempty(data_train) || isempty(data_test))
@@ -74,8 +74,8 @@ function FluxNLPModel(
 
   training_minibatch_iterator = create_minibatch(xtrn, ytrn, size_minibatch)
   test_minibatch_iterator = create_minibatch(xtst, ytst, size_minibatch)
-  current_training_minibatch = rand(training_minibatch_iterator) #TODO add document that user has to pass in the current minibatch
-  current_test_minibatch = rand(test_minibatch_iterator)
+  current_training_minibatch = first(training_minibatch_iterator) #TODO add document that user has to pass in the current minibatch
+  current_test_minibatch = first(test_minibatch_iterator)
 
   return FluxNLPModel(
     meta,

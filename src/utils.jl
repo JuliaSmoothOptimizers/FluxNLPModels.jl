@@ -15,23 +15,23 @@ function create_minibatch(x_data, y_data, minibatch_size; shuffle::Bool)
   return mb
 end
 
-"""
-    reset_minibatch_train!(nlp::AbstractFluxNLPModel)
+# """
+#     reset_minibatch_train!(nlp::AbstractFluxNLPModel)
 
-Select the first training minibatch for `nlp`.
-"""
-function reset_minibatch_train!(nlp::AbstractFluxNLPModel)
-  nlp.current_training_minibatch = first(nlp.training_minibatch_iterator)
-end
+# Select the first training minibatch for `nlp`.
+# """
+# function reset_minibatch_train!(nlp::AbstractFluxNLPModel)
+#   nlp.current_training_minibatch = first(nlp.training_minibatch_iterator)
+# end
 
-"""
-    reset_minibatch_test!(nlp::AbstractFluxNLPModel)
+# """
+#     reset_minibatch_test!(nlp::AbstractFluxNLPModel)
 
-Select the first test minibatch for `nlp`.
-"""
-function reset_minibatch_test!(nlp::AbstractFluxNLPModel)
-  nlp.current_test_minibatch = first(nlp.test_minibatch_iterator)
-end
+# Select the first test minibatch for `nlp`.
+# """
+# function reset_minibatch_test!(nlp::AbstractFluxNLPModel)
+#   nlp.current_test_minibatch = first(nlp.test_minibatch_iterator)
+# end
 
 """
     accuracy(nlp::AbstractFluxNLPModel)
@@ -39,7 +39,7 @@ end
 Compute the accuracy of the network `nlp.chain` on the entire test dataset.
 """
 #TODO add the accuracy
-
+ 
 """
     set_vars!(model::AbstractFluxNLPModel{T,S}, new_w::AbstractVector{T}) where {T<:Number, S}
 
@@ -48,10 +48,11 @@ Sets the vaiables and rebuild the chain
 function set_vars!(
   model::AbstractFluxNLPModel{T, S},
   new_w::AbstractVector{T},
-) where {T <: Number, S}
+) where {T <: Number, S} #TODO test T 
 
-  #Flattening #TODO do it just once
+  #Flattening 
   old_w, rebuild = Flux.destructure(model.chain) #TODO IMPORTANT check what happens if it started with float32 and now I do float64
+  nlp.w = new_w
   # model two
   model.chain = rebuild(new_w)
   return old_w # return the old wieghts #TODO not sure if we need this but it would be good to keep track

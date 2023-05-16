@@ -1,3 +1,9 @@
+name = "FluxNLPModels"
+uuid = "3dcc2932-5bc2-437b-87b2-3b153cf2a08c"
+authors = ["Farhad Rahbarnia <farhadrclass@gmail.com>"]
+version = "0.0.1"
+
 [deps]
 Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
-NLPModels = "a4795742-8479-5a88-8948-cc11e1c8c1a6"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
