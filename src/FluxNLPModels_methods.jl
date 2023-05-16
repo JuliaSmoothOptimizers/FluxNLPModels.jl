@@ -2,11 +2,16 @@
     f = obj(nlp, x)
 
 Evaluate `f(x)`, the objective function of `nlp` at `x`.
+# Arguments
+- `nlp::AbstractFluxNLPModel{T, S}`: the FluxNLPModel data struct
+- `w::AbstractVector{T}`: is the vector of weights/variables;
+
+# Output
+- `f_w`: the new objective function
 """
 function NLPModels.obj(nlp::AbstractFluxNLPModel{T, S}, w::AbstractVector{T}) where {T, S}
   increment!(nlp, :neval_obj)
-  set_vars!(nlp, w) #TODO ask orban
-  #TODO check If I need to reconstruct it 
+  set_vars!(nlp, w)
   f_w = nlp.chain(nlp.current_training_minibatch)
   return f_w
 end
@@ -15,52 +20,52 @@ end
     g = grad!(nlp, x, g)
 
 Evaluate `∇f(x)`, the gradient of the objective function at `x` in place.
+# Arguments
+- `nlp::AbstractFluxNLPModel{T, S}`: the FluxNLPModel data struct
+- `w::AbstractVector{T}`: is the vector of weights/variables;
+-`g::AbstractVector{T}`: the gradient vector
+
+# Output
+- `g`: the gradient at point x
 """
 function NLPModels.grad!(
-  nlp::AbstractFluxNLPModel{T, S}, #TODO add loss function to NLP
+  nlp::AbstractFluxNLPModel{T, S},
   w::AbstractVector{T},
   g::AbstractVector{T},
 ) where {T, S}
   @lencheck nlp.meta.nvar w g
   increment!(nlp, :neval_grad)
-  set_vars!(nlp, w)  #TODO does it update it ? or does it do   m = rebuild(flat) # we can rebuild with a new weights here we use flat wigth
-  
-  x, y = nlp.current_training_minibatch #TODO check this
-  param = Flux.params(nlp.chain) # model's trainable parameters, #TODO DO I need it here or ? I need to improve this 
-  gs = gradient(() -> nlp.loss(nlp.chain(x), y), param) # compute gradient #TODO loss_f
-  
-  for p in param
-      buff , re  = Flux.destructure(gs[p])
-      append!(g, buff);    
-  end
-
+  set_vars!(nlp, w)
+  g = flat_grad!(nlp, g)
   return g
 end
 
+"""
+    objgrad!(nlp, x, g)
 
-#### Return both #TODO write explation 
+    Evaluate both `f(x)`, the objective function of `nlp` at `x` and `∇f(x)`, the gradient of the objective function at `x` in place.
 
+# Arguments
+- `nlp::AbstractFluxNLPModel{T, S}`: the FluxNLPModel data struct
+- `w::AbstractVector{T}`: is the vector of weights/variables;
+-`g::AbstractVector{T}`: the gradient vector
+
+# Output
+- `f_w`, `g`: the new objective function, and the gradient at point x
+
+"""
 function NLPModels.objgrad!(
-  nlp::AbstractFluxNLPModel{T, S}, #TODO add loss function to NLP
+  nlp::AbstractFluxNLPModel{T, S},
   w::AbstractVector{T},
   g::AbstractVector{T},
 ) where {T, S}
   @lencheck nlp.meta.nvar w g
   #both updates
-  increment!(nlp, :neval_obj) 
+  increment!(nlp, :neval_obj)
   increment!(nlp, :neval_grad)
 
-  set_vars!(nlp, w)  #TODO does it update it ? or does it do   m = rebuild(flat) # we can rebuild with a new weights here we use flat wigth
+  set_vars!(nlp, w)
   f_w = nlp.chain(nlp.current_training_minibatch)
-  
-  x, y = nlp.current_training_minibatch #TODO check this
-  param = Flux.params(nlp.chain) # model's trainable parameters, #TODO DO I need it here or ? I need to improve this 
-  gs = gradient(() -> nlp.loss(nlp.chain(x), y), param) # compute gradient #TODO loss_f
-  
-  for p in param #TODO make this a function
-      buff , re  = Flux.destructure(gs[p])
-      append!(g, buff);    
-  end 
-
-  return  f_w , g
+  g = flat_grad!(nlp, g)
+  return f_w, g
 end
