@@ -2,6 +2,7 @@
     f = obj(nlp, x)
 
 Evaluate `f(x)`, the objective function of `nlp` at `x`.
+
 # Arguments
 - `nlp::AbstractFluxNLPModel{T, S}`: the FluxNLPModel data struct
 - `w::AbstractVector{T}`: is the vector of weights/variables;
