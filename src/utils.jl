@@ -53,8 +53,11 @@ function set_vars!(
 ) where {T <: Number, S}
 
   #Flattening #TODO do it just once
-  old_w, rebuild = Flux.destructure(model.chain)
+  old_w, rebuild = Flux.destructure(model.chain) #TODO IMPORTANT check what happens if it started with float32 and now I do float64
   # model two
   model.chain = rebuild(new_w)
 
 end
+
+#TODO 
+#TODO https://github.com/JuliaSmoothOptimizers/DCISolver.jl/blob/main/Project.toml

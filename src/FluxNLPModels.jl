@@ -58,12 +58,12 @@ Suppose `(xtrn,ytrn) = Fluxnlp.data_train`, then the size of each training minib
 By default, the other data are respectively set to the training dataset and test dataset of `MLDatasets.MNIST`, with each minibatch a hundredth of the dataset.
  """
 function FluxNLPModel(
-  chain_ANN::T;
-  size_minibatch::Int = 100,
+  chain_ANN::T,
   data_train,
-  data_test,
-  loss_f::f=Flux.crossentropy,
-) where {T <: Chain}
+  data_test;
+  size_minibatch::Int = 100,
+  loss_f::F=Flux.crossentropy,
+) where {T <: Chain, F<:Function}
   x0 = vector_params(chain_ANN)
   n = length(x0)
   meta = NLPModelMeta(n, x0 = x0)

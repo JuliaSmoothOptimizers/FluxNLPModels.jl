@@ -7,8 +7,8 @@ Julia ≥ 1.6.
 ## How to install
 This module can be installed with the following command:
 ```julia
-pkg> add KnetNLPModels
-pkg> test KnetNLPModels
+# pkg> add KnetNLPModels
+# pkg> test KnetNLPModels
 ```
 
 ## Synopsis
