@@ -71,14 +71,14 @@ end
 - `f_w`, `g`: the new objective function, and the grad at point x
 """
 
-function flat_grad!(nlp::AbstractFluxNLPModel{T, S}, g::AbstractVector{T}) where {T, S}
-  x, y = nlp.current_training_minibatch
-  param = Flux.params(nlp.chain)
-  gs = gradient(() -> nlp.loss_f(nlp.chain(x), y), param) # compute gradient  
+# function flat_grad!(nlp::AbstractFluxNLPModel{T, S}, g::AbstractVector{T}) where {T, S}
+#   x, y = nlp.current_training_minibatch
+#   param = Flux.params(nlp.chain)
+#   gs = gradient(() -> nlp.loss_f(nlp.chain(x), y), param) # compute gradient  
 
-  for p in param
-    buff, re = Flux.destructure(gs[p])
-    append!(g, buff)
-  end
-  return g
-end
+#   for p in param
+#     buff, re = Flux.destructure(gs[p])
+#     append!(g, buff)
+#   end
+#   return g
+# end

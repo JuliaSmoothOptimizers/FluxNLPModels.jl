@@ -13,7 +13,8 @@ Evaluate `f(x)`, the objective function of `nlp` at `x`.
 function NLPModels.obj(nlp::AbstractFluxNLPModel{T, S}, w::AbstractVector{T}) where {T, S}
   increment!(nlp, :neval_obj)
   set_vars!(nlp, w)
-  f_w = nlp.chain(nlp.current_training_minibatch)
+  x, y = nlp.current_training_minibatch
+  f_w = nlp.loss_f(nlp.chain(x), y)
   return f_w
 end
 
@@ -37,7 +38,15 @@ function NLPModels.grad!(
   @lencheck nlp.meta.nvar w g
   increment!(nlp, :neval_grad)
   set_vars!(nlp, w)
-  g = flat_grad!(nlp, g)
+
+  x, y = nlp.current_training_minibatch
+  param = Flux.params(nlp.chain)
+  gs = gradient(() -> nlp.loss_f(nlp.chain(x), y), param) # compute gradient  
+
+  for p in param
+    buff, re = Flux.destructure(gs[p])
+    append!(g, buff)
+  end
   return g
 end
 
@@ -66,7 +75,17 @@ function NLPModels.objgrad!(
   increment!(nlp, :neval_grad)
 
   set_vars!(nlp, w)
-  f_w = nlp.chain(nlp.current_training_minibatch)
-  g = flat_grad!(nlp, g)
+
+  x, y = nlp.current_training_minibatch
+  f_w = nlp.loss_f(nlp.chain(x), y)
+
+
+  param = Flux.params(nlp.chain)
+  gs = gradient(() -> nlp.loss_f(nlp.chain(x), y), param) # compute gradient  #TODO maybe I use F_w
+
+  for p in param
+    buff, re = Flux.destructure(gs[p])
+    append!(g, buff)
+  end
   return f_w, g
 end
