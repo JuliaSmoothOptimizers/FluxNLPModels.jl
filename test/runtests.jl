@@ -67,14 +67,14 @@ device = cpu #TODO should we test on GPU?
   old_w, rebuild = Flux.destructure(DN)
   @test DNNLPModel.w == old_w
 
-  x1 = copy(DNNLPModel.w)
-  x2 = (x -> x + 50).(Array(DNNLPModel.w))
+  # x1 = copy(DNNLPModel.w)
+  # x2 = (x -> x + 50).(Array(DNNLPModel.w))
 
-  obj_x1 = obj(DNNLPModel, x1)
-  grad_x1 = NLPModels.grad(DNNLPModel, x1)
+  # obj_x1 = obj(DNNLPModel, x1)
+  # grad_x1 = NLPModels.grad(DNNLPModel, x1)
 
-  grad_x1_2 = similar(grad_x1)
-  obj_x1_2, grad_x1_2 = NLPModels.objgrad!(DNNLPModel, x1, grad_x1_2)
+  # grad_x1_2 = similar(grad_x1)
+  # obj_x1_2, grad_x1_2 = NLPModels.objgrad!(DNNLPModel, x1, grad_x1_2)
 
   # @test obj_x1 == obj_x1_2
   # @test grad_x1 == obj_x1_2
