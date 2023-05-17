@@ -1,19 +1,19 @@
 
-"""
-    create_minibatch(X, Y, minibatch_size)
+# """
+#     create_minibatch(X, Y, minibatch_size)
 
-Create a minibatch's iterator of the data `X`, `Y` of size `1/minibatch_size * length(Y)`.
-"""
-function create_minibatch(x_data, y_data, minibatch_size; shuffle::Bool)
-  mb = minibatch(
-    x_data,
-    y_data,
-    minibatch_size;
-    xsize = (size(x_data, 1), size(x_data, 2), size(x_data, 3), :),
-  )
-  mb = DataLoader((x_data, y_data), batchsize = minibatch_size, shuffle = shuffle)
-  return mb
-end
+# Create a minibatch's iterator of the data `X`, `Y` of size `1/minibatch_size * length(Y)`.
+# """
+# function create_minibatch(x_data, y_data, minibatch_size; shuffle::Bool)
+#   mb = minibatch(
+#     x_data,
+#     y_data,
+#     minibatch_size;
+#     xsize = (size(x_data, 1), size(x_data, 2), size(x_data, 3), :),
+#   )
+#   mb = DataLoader((x_data, y_data), batchsize = minibatch_size, shuffle = shuffle)
+#   return mb
+# end
 
 # """
 #     reset_minibatch_train!(nlp::AbstractFluxNLPModel)
