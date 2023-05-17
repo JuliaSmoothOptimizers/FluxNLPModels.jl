@@ -67,28 +67,22 @@ device = cpu #TODO should we test on GPU?
   old_w, rebuild = Flux.destructure(DN)
   @test DNNLPModel.w == old_w
 
-  # x1 = copy(DNNLPModel.w)
-  # x2 = (x -> x + 50).(Array(DNNLPModel.w))
+  x1 = copy(DNNLPModel.w)
 
-  # obj_x1 = obj(DNNLPModel, x1)
-  # grad_x1 = NLPModels.grad(DNNLPModel, x1)
+  obj_x1 = obj(DNNLPModel, x1)
+  grad_x1 = NLPModels.grad(DNNLPModel, x1)
 
-  # grad_x1_2 = similar(grad_x1)
-  # obj_x1_2, grad_x1_2 = NLPModels.objgrad!(DNNLPModel, x1, grad_x1_2)
+  grad_x1_2 = similar(x1)
+  obj_x1_2, grad_x1_2 = NLPModels.objgrad!(DNNLPModel, x1, grad_x1_2)
 
-  # @test obj_x1 == obj_x1_2
-  # @test grad_x1 == obj_x1_2
 
-  # @test x1 == DNNLPModel.w
-  # @test params(DNNLPModel.chain)[1].value[1] == x1[1]
-  # @test params(DNNLPModel.chain)[1].value[2] == x1[2]
 
-  # obj_x2 = obj(DNNLPModel, x2)
-  # grad_x2 = NLPModels.grad(DNNLPModel, x2)
-  # @test x2 == DNNLPModel.w
-  # @test params(DNNLPModel.chain)[1].value[1] == x2[1]
-  # @test params(DNNLPModel.chain)[1].value[2] == x2[2]
+  @test obj_x1 == obj_x1_2
+  @test grad_x1  .≈ grad_x1_2
 
-  # @test obj_x1 != obj_x2
-  # @test grad_x1 != grad_x2
+  @test x1 == DNNLPModel.w
+  @test Flux.params(DNNLPModel.chain)[1][1] == x1[1]
+  @test Flux.params(DNNLPModel.chain)[1][2] == x1[2]
+
+
 end
