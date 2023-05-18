@@ -1,5 +1,5 @@
 using FluxNLPModels
-using Flux
+using CUDA, Flux, NLPModels
 
 #     Ref:
 #     https://github.com/FluxML/model-zoo/blob/master/vision/mlp_mnist/mlp_mnist.jl
@@ -11,7 +11,6 @@ using Flux.Data: DataLoader
 using Flux: onehotbatch, onecold, @epochs
 using Flux.Losses: logitcrossentropy
 using Base: @kwdef
-using CUDA
 using MLDatasets
 # using TensorBoardLogger #the usage of TensorBoardLogger, 
 using Logging: with_logger
@@ -75,7 +74,7 @@ end
   use_cuda::Bool = true   # use gpu (if cuda available)
   verbose_freq = 10                               # logging for every verbose_freq iterations
   tblogger = true                                 # log training with tensorboard
-  save_path = "output"                            # results path
+  save_path = "runs/output"                            # results path
 end
 
 #Main
@@ -83,9 +82,9 @@ args = Args() # collect options in a struct for convenience
 
 #TODO create subchannle for each project
 # logging by TensorBoard.jl
-if args.tblogger
-  tblogger = TBLogger(args.save_path, tb_overwrite) #TODO changing tblogger for each project 
-end
+# if args.tblogger
+#   tblogger = TBLogger(args.save_path, tb_overwrite) #TODO changing tblogger for each project 
+# end
 
 if CUDA.functional() && args.use_cuda
   @info "Training on CUDA GPU"

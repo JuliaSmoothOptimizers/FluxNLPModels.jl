@@ -78,7 +78,8 @@ device = cpu #TODO should we test on GPU?
 
   @test DNNLPModel.w == old_w
   @test obj_x1 == obj_x1_2
-  @test grad_x1 ≈ grad_x1_2
+  @test norm(grad_x1 - grad_x1_2) ≈ 0.0
+  # @test grad_x1 ≈ grad_x1_2
   # @test all(grad_x1  .≈ grad_x1_2)
   @test x1 == DNNLPModel.w
   @test Flux.params(DNNLPModel.chain)[1][1] == x1[1]
