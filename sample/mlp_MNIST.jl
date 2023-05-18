@@ -158,30 +158,66 @@ end
 #########################################################################
 ### SGD FluxNLPModels
 
+function train_FluxNlPModel_SGD(; η = 0.1)
+  args = Args(; kws...) ## Collect options in a struct for convenience
 
+  if CUDA.functional() && args.use_cuda
+    @info "Training on CUDA GPU"
+    CUDA.allowscalar(false)
+    device = gpu
+  else
+    @info "Training on CPU"
+    device = cpu
+  end
+
+  !ispath(args.save_path) && mkpath(args.save_path)
+
+  ## Create test and train dataloaders
+  train_loader, test_loader = getdata(args)
+
+  @info "Constructing model and starting training"
+  ## Construct model
+  model = build_model() |> device
+
+  # now we set the model to FluxNLPModel
+  nlp = FluxNLPModel(model, train_loader, test_loader; loss_f = loss)
+  g = similar(nlp.w) #TODO should they be here?
+  x_k = copy(nlp.w)
+
+  for epoch = 1:(args.epochs)
+    for (x, y) in train_loader
+      x, y = device(x), device(y) ## transfer data to device
+      nlp.current_training_minibatch = (x, y)
+
+      fk, g = NLPModels.objgrad!(nlp, x_k, g)
+      x_k -=  η .* g      #   update the parameter
+      FluxNLPModels.set_vars!(nlp, x_k) #TODO Not sure about this
+    end
+    # logging
+    TBCallback(train_loader, test_loader, nlp.chain, epoch, device) #not sure to pass nlp.chain or fx
+  end
+end
 
 #########################################################################
 ## R2 FluxNLPModels
 
 ########################################################################
 ### Main File to Callback
-#if you want the train_flux
-if args.tblogger
-    tblogger = TBLogger(args.save_path*"train_flux", tb_overwrite) #TODO changing tblogger for each project 
-  end
-  
-train_flux()
+# #if you want the train_flux
+# if args.tblogger
+#   tblogger = TBLogger(args.save_path * "train_flux", tb_overwrite) #TODO changing tblogger for each project 
+# end
+
+# train_flux()
 
 if args.tblogger
-    tblogger = TBLogger(args.save_path*"train_FluxNlPModel_SGD", tb_overwrite) #TODO changing tblogger for each project 
-  end
-  
+  tblogger = TBLogger(args.save_path * "train_FluxNlPModel_SGD", tb_overwrite) #TODO changing tblogger for each project 
+end
+
 train_FluxNlPModel_SGD()
 
-if args.tblogger
-    tblogger = TBLogger(args.save_path*"train_FluxNlPModel_R2", tb_overwrite) #TODO changing tblogger for each project 
-  end
-  
-train_FluxNlPModel_R2()
+# if args.tblogger
+#   tblogger = TBLogger(args.save_path * "train_FluxNlPModel_R2", tb_overwrite) #TODO changing tblogger for each project 
+# end
 
-
+# train_FluxNlPModel_R2()
