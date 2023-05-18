@@ -13,8 +13,10 @@ function getdata(args, device)
   ENV["DATADEPS_ALWAYS_ACCEPT"] = "true" # download datasets without having to manually confirm the download
 
   # Loading Dataset	
-  xtrain, ytrain = MLDatasets.MNIST.traindata(Float32)
-  xtest, ytest = MLDatasets.MNIST.testdata(Float32)
+  # xtrain, ytrain = MLDatasets.MNIST.traindata(Float32)
+  # xtest, ytest = MLDatasets.MNIST.testdata(Float32)
+  xtrain, ytrain = MLDatasets.MNIST(Tx = Float32, split = :train)[:]
+  xtest, ytest = MLDatasets.MNIST(Tx = Float32, split = :test)[:]
 
   # Reshape Data in order to flatten each image into a linear array
   xtrain = Flux.flatten(xtrain)
@@ -62,7 +64,7 @@ device = cpu #TODO should we test on GPU?
 
   # Construct model
   DN = build_model() |> device
-  DNNLPModel = FluxNLPModel(DN, train_data,  test_data)
+  DNNLPModel = FluxNLPModel(DN, train_data, test_data)
 
   old_w, rebuild = Flux.destructure(DN)
 
@@ -76,11 +78,9 @@ device = cpu #TODO should we test on GPU?
 
   @test DNNLPModel.w == old_w
   @test obj_x1 == obj_x1_2
-  @test grad_x1  ≈ grad_x1_2
+  @test grad_x1 ≈ grad_x1_2
   # @test all(grad_x1  .≈ grad_x1_2)
   @test x1 == DNNLPModel.w
   @test Flux.params(DNNLPModel.chain)[1][1] == x1[1]
   @test Flux.params(DNNLPModel.chain)[1][2] == x1[2]
-
-
 end

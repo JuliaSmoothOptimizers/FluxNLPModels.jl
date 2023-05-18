@@ -79,7 +79,6 @@ function NLPModels.objgrad!(
   x, y = nlp.current_training_minibatch
   f_w = nlp.loss_f(nlp.chain(x), y)
 
-
   param = Flux.params(nlp.chain)
   gs = gradient(() -> nlp.loss_f(nlp.chain(x), y), param) # compute gradient  #TODO maybe I use F_w
 

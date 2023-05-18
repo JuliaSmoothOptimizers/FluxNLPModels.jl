@@ -7,7 +7,6 @@ export flat_grad!
 export reset_minibatch_train!, reset_minibatch_test!
 export create_minibatch, set_vars!
 
-
 abstract type AbstractFluxNLPModel{T, S} <: AbstractNLPModel{T, S} end
 
 """ 
@@ -56,7 +55,6 @@ function FluxNLPModel(
   size_minibatch::Int = 100,
   loss_f::F = Flux.mse, #Flux.crossentropy,
 ) where {T <: Chain, F <: Function}
-
   x0, re = Flux.destructure(chain_ANN)
   n = length(x0)
   meta = NLPModelMeta(n, x0 = x0)
@@ -93,4 +91,3 @@ end
 include("utils.jl")
 include("FluxNLPModels_methods.jl")
 end
-
