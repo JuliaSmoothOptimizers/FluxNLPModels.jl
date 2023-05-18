@@ -211,7 +211,7 @@ if args.tblogger #TODO add timer to this
   tblogger = TBLogger(args.save_path * "train_FluxNLPModel_SGD", tb_overwrite) #TODO changing tblogger for each project 
 end
 
-train_FluxNLPModel_SGD()
+train_FluxNLPModel_SGD() #TODO this is slow
 
 # if args.tblogger
 #   tblogger = TBLogger(args.save_path * "train_FluxNlPModel_R2", tb_overwrite) #TODO changing tblogger for each project 
@@ -220,7 +220,7 @@ train_FluxNLPModel_SGD()
 # train_FluxNlPModel_R2()
 
 
-#closing the logger other wise it will error out
+#closing the logger otherwise it will error out
 if args.tblogger
   close(tblogger)
 end
