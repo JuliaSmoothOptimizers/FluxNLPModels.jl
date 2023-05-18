@@ -158,7 +158,7 @@ end
 #########################################################################
 ### SGD FluxNLPModels
 
-function train_FluxNlPModel_SGD(; η = 0.1)
+function train_FluxNLPModel_SGD(; kws...)
   args = Args(; kws...) ## Collect options in a struct for convenience
 
   if CUDA.functional() && args.use_cuda
@@ -190,7 +190,7 @@ function train_FluxNlPModel_SGD(; η = 0.1)
       nlp.current_training_minibatch = (x, y)
 
       fk, g = NLPModels.objgrad!(nlp, x_k, g)
-      x_k -=  η .* g      #   update the parameter
+      x_k -= args.η .* g      #   update the parameter
       FluxNLPModels.set_vars!(nlp, x_k) #TODO Not sure about this
     end
     # logging
@@ -210,14 +210,20 @@ end
 
 # train_flux()
 
-if args.tblogger
-  tblogger = TBLogger(args.save_path * "train_FluxNlPModel_SGD", tb_overwrite) #TODO changing tblogger for each project 
+if args.tblogger #TODO add timer to this 
+  tblogger = TBLogger(args.save_path * "train_FluxNLPModel_SGD", tb_overwrite) #TODO changing tblogger for each project 
 end
 
-train_FluxNlPModel_SGD()
+train_FluxNLPModel_SGD()
 
 # if args.tblogger
 #   tblogger = TBLogger(args.save_path * "train_FluxNlPModel_R2", tb_overwrite) #TODO changing tblogger for each project 
 # end
 
 # train_FluxNlPModel_R2()
+
+
+#closing the logger
+if args.tblogger
+  close(tblogger)
+end
