@@ -86,14 +86,14 @@ args = Args() # collect options in a struct for convenience
 #   tblogger = TBLogger(args.save_path, tb_overwrite) #TODO changing tblogger for each project 
 # end
 
-if CUDA.functional() && args.use_cuda
-  @info "Training on CUDA GPU"
-  CUDA.allowscalar(false)
-  device = gpu
-else
-  @info "Training on CPU"
-  device = cpu
-end
+# if CUDA.functional() && args.use_cuda
+#   @info "Training on CUDA GPU"
+#   CUDA.allowscalar(false)
+#   device = gpu
+# else
+#   @info "Training on CPU"
+#   device = cpu
+# end
 
 # Callback to log information after every epoch
 #TO see the callback run " tensorboard --logdir output " after the code is finished running, the output is the savepath
@@ -182,13 +182,14 @@ function train_FluxNLPModel_SGD(; kws...)
   nlp = FluxNLPModel(model, train_loader, test_loader; loss_f = loss)
   g = similar(nlp.w) #TODO should they be here?
   x_k = copy(nlp.w)
-
+  println("1",typeof(x_k),typeof(g))
   for epoch = 1:(args.epochs)
     for (x, y) in train_loader
       x, y = device(x), device(y) ## transfer data to device
       nlp.current_training_minibatch = (x, y)
 
       fk, g = NLPModels.objgrad!(nlp, x_k, g)
+      println("2",typeof(x_k),typeof(g))
       x_k -= args.η .* g      #   update the parameter
       FluxNLPModels.set_vars!(nlp, x_k) #TODO Not sure about this
     end

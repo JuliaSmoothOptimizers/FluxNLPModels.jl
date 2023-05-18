@@ -7,9 +7,10 @@ using Flux: onehotbatch, onecold, @epochs
 using Flux.Losses: logitcrossentropy
 using Base: @kwdef
 using MLDatasets
+using LinearAlgebra
 
 # Helper functions
-function getdata(args, device)
+function getdata(args)
   ENV["DATADEPS_ALWAYS_ACCEPT"] = "true" # download datasets without having to manually confirm the download
 
   # Loading Dataset	
@@ -60,7 +61,7 @@ device = cpu #TODO should we test on GPU?
 @testset "FluxNLPModels tests" begin
 
   # Create test and train dataloaders
-  train_data, test_data = getdata(args, device)
+  train_data, test_data = getdata(args)
 
   # Construct model
   DN = build_model() |> device
@@ -78,7 +79,9 @@ device = cpu #TODO should we test on GPU?
 
   @test DNNLPModel.w == old_w
   @test obj_x1 == obj_x1_2
+  println(norm(grad_x1 - grad_x1_2))
   @test norm(grad_x1 - grad_x1_2) ≈ 0.0
+
   # @test grad_x1 ≈ grad_x1_2
   # @test all(grad_x1  .≈ grad_x1_2)
   @test x1 == DNNLPModel.w
