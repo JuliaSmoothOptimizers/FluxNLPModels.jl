@@ -182,14 +182,11 @@ function train_FluxNLPModel_SGD(; kws...)
   nlp = FluxNLPModel(model, train_loader, test_loader; loss_f = loss)
   g = similar(nlp.w) #TODO should they be here?
   x_k = copy(nlp.w)
-  println("1",typeof(x_k),typeof(g))
   for epoch = 1:(args.epochs)
     for (x, y) in train_loader
       x, y = device(x), device(y) ## transfer data to device
       nlp.current_training_minibatch = (x, y)
-
       fk, g = NLPModels.objgrad!(nlp, x_k, g)
-      println("2",typeof(x_k),typeof(g))
       x_k -= args.η .* g      #   update the parameter
       FluxNLPModels.set_vars!(nlp, x_k) #TODO Not sure about this
     end
@@ -223,7 +220,7 @@ train_FluxNLPModel_SGD()
 # train_FluxNlPModel_R2()
 
 
-#closing the logger
+#closing the logger other wise it will error out
 if args.tblogger
   close(tblogger)
 end
