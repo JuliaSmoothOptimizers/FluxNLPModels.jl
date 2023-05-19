@@ -86,7 +86,7 @@ function NLPModels.objgrad!(
   gs = gradient(() -> nlp.loss_f(nlp.chain(x), y), param) # compute gradient  #TODO maybe I use F_w
   
   i = 1
-  for p in param
+  for p in param #TODO too slow
     buff, re = Flux.destructure(gs[p])
     for item in buff
       g[i] = item 
