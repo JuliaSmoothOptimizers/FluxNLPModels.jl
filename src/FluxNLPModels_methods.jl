@@ -46,7 +46,7 @@ function NLPModels.grad!(
   for p in param
     buff, re = Flux.destructure(gs[p])
     for item in buff
-      g[i] = item 
+      g[i] = item #g[i:buff.size] .= buff
       i+=1
     end
   end
