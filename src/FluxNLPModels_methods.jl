@@ -44,7 +44,7 @@ function NLPModels.grad!(
     x, y = nlp.current_training_minibatch
     nlp.loss_f(nlp.chain(x), y)
   end
-  g = gradient(local_loss,w)
+  g = gradient(local_loss, w)
   return g[1]
 end
 
@@ -81,7 +81,7 @@ function NLPModels.objgrad!(
     x, y = nlp.current_training_minibatch
     nlp.loss_f(nlp.chain(x), y)
   end
-  g = gradient(local_loss,w)
+  g = gradient(local_loss, w)
 
   return f_w, g[1]
 end

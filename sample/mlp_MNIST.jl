@@ -187,9 +187,9 @@ function train_FluxNLPModel_SGD(; kws...)
     for (x, y) in train_loader
       x, y = device(x), device(y) ## transfer data to device
       nlp.current_training_minibatch = (x, y)
-    #   fk, g = NLPModels.objgrad!(nlp, w_k, g)
-    #  fk = NLPModels.obj(nlp,w_k)
-      g = NLPModels.grad(nlp,w_k)     
+      #   fk, g = NLPModels.objgrad!(nlp, w_k, g)
+      #  fk = NLPModels.obj(nlp,w_k)
+      g = NLPModels.grad(nlp, w_k)
       w_k -= args.η .* g      #   update the parameter
       FluxNLPModels.set_vars!(nlp, w_k) #TODO Not sure about this
     end
@@ -201,170 +201,143 @@ end
 #########################################################################
 ## R2 FluxNLPModels
 
+# used in the callback of R2 for training deep learning model 
+mutable struct StochasticR2Data
+  epoch::Int
+  i::Int
+  # other fields as needed...
+  max_epoch::Int
+  ϵ::Float64 #TODO Fix with type T
+  state
+end
 
-# # used in the callback of R2 for training deep learning model 
-# mutable struct StochasticR2Data
-#     epoch::Int
-#     i::Int
-#     # other fields as needed...
-#     max_epoch::Int
-#     acc_arr::Vector{Float64}
-#     train_acc_arr::Vector{Float64}
-#     epoch_arr::Vector{Float64}
-#     grads_arr::Vector{Float64} #TODO fix this type to be dynamic
-#     ϵ::Float64 #TODO Fix with type T
-# end
+function cb(
+  nlp,
+  solver,
+  stats,
+  train_loader,
+  test_loader,
+  device,
+  param::AbstractParameterSet,
+  data::StochasticR2Data,
+)
 
+  # logging
+  TBCallback(train_loader, test_loader, nlp.chain, data.epoch, device) #not sure to pass nlp.chain or fx
 
+  # Max epoch
+  if data.epoch == data.max_epoch
+    stats.status = :user
+    return
+  end
+  iter = train_loader
+  if data.i == 0
+    next = first(iter)
+  else
+    next = iterate(iter, data.state)
+  end
+  data.i = 1 #flag to see if we are at first
 
-# function cb(
-#     nlp,
-#     solver,
-#     stats,
-#     param::AbstractParameterSet,
-#     data::StochasticR2Data,
-#     window = 5,
-# )
-#     # Max epoch
-#     if data.epoch == data.max_epoch
-#         stats.status = :user
-#         return
-#     end
+  if next === nothing #one epoch is finished
+    data.i = 0
+    data.epoch += 1
+    return
+  end
+  (item, data.state) = next
+  nlp.current_training_minibatch = device(item) # move to cpu or gpu
+end
 
-#     # if stats.iter %5==0
-#     data.i = KnetNLPModels.minibatch_next_train!(nlp)
-#     #TODO check if we need to update the weights
-#     # set_vars!(nlp, stats.solution) #updating the weight of the model #TODO not much effect
+function train_FluxNlPModel_R2(;
+  verbose = -1,
+  atol::T = √eps(T),
+  rtol::T = √eps(T),
+  η1 = eps(T)^(1 / 4),
+  η2 = T(0.95),
+  γ1 = T(1 / 2),
+  γ2 = 1 / γ1,
+  σmin = zero(T),# change this
+  β::T = T(0),
+  max_time = Inf,
+  kws...,
+)
+  args = Args(; kws...) ## Collect options in a struct for convenience
 
-#     # calculate the stopping condition on the first time the epoch is called
-#     if (data.i == 2)
-#         norm_∇fk = norm(solver.gx)
-#         data.ϵ = param.atol.value + param.rtol.value * norm_∇fk
-#         ## maybe I only use 
-#         # data.ϵ = param.atol.value + param.rtol.value
-#     end
+  if CUDA.functional() && args.use_cuda
+    @info "Training on CUDA GPU"
+    CUDA.allowscalar(false)
+    device = gpu
+  else
+    @info "Training on CPU"
+    device = cpu
+  end
 
-#     # # to keep the grads from each call 
-#     append!(data.grads_arr, norm(solver.gx))
+  !ispath(args.save_path) && mkpath(args.save_path)
 
-#     if length(data.grads_arr) >= window
-#         avg_grad_mv = last(sma(data.grads_arr, window)) # Simple moving avarage
-#         # avg_grad_mv = last(ema(data.grads_arr, window)) # Exponential Moving Average  
-#         if (avg_grad_mv <= data.ϵ)
-#             @info @sprintf "%s:  %.1E , %s:  %.1E " "avg_grad_mv" avg_grad_mv "ϵ" data.ϵ
-#             stats.status = :first_order #optimal TODO change this
-#         end
-#     end
-#     if data.i == 1   # once one epoch is finished     
-#         # reset
-#         data.grads_arr = []
-#         data.epoch += 1
-#         acc = KnetNLPModels.accuracy(nlp) # accracy of the minibatch on the test Data
-#         # TODO  make sure we calculate mini-batch accracy
-#         train_acc = Knet.accuracy(nlp.chain; data = nlp.training_minibatch_iterator) #TODO minibatch acc.
-#         # TODO train acc either on mini-batch or epoch level on All
-#         @info @sprintf "Current epoch:  %d out of max epoch: %d, \t train_acc: %f \t test_acc: %f" data.epoch data.max_epoch train_acc acc
-#         append!(data.train_acc_arr, train_acc) #TODO fix this to save the acc
-#         append!(data.acc_arr, acc) #TODO fix this to save the acc
-#         append!(data.epoch_arr, data.epoch)
-#     end
+  ## Create test and train dataloaders
+  train_loader, test_loader = getdata(args)
 
-#     #TODO bring the stuff from SR2 here 
-#     # we need to reset the ∇fk and σk here since the data has changes
-#     # we also do not need to know β since the momentum doesn't make sense in case where the data has changed?
+  @info "Constructing model and starting training"
+  ## Construct model
+  model = build_model() |> device
 
-#     # set_objective!(stats, fck) # old value
-#     #   grad!(nlp, x, ∇fk) #grad is wrong 
-#     #   norm_∇fk = norm(∇fk) # wrong 
+  # now we set the model to FluxNLPModel
+  nlp = FluxNLPModel(model, train_loader, test_loader; loss_f = loss)
 
-# end
+  #set the fist data sets
+  next = first(iter)
+  (item, state) = next
+  nlp.current_training_minibatch = device(item) # move to cpu or gpu
 
-# function train_FluxNlPModel_R2()
-#     (; kws...)
-#   args = Args(; kws...) ## Collect options in a struct for convenience
+  stochastic_data = StochasticR2Data(0, 1, mepoch, atol, state) # data.i =1
 
-#   if CUDA.functional() && args.use_cuda
-#     @info "Training on CUDA GPU"
-#     CUDA.allowscalar(false)
-#     device = gpu
-#   else
-#     @info "Training on CPU"
-#     device = cpu
-#   end
-
-#   !ispath(args.save_path) && mkpath(args.save_path)
-
-#   ## Create test and train dataloaders
-#   train_loader, test_loader = getdata(args)
-
-#   @info "Constructing model and starting training"
-#   ## Construct model
-#   model = build_model() |> device
-
-#   # now we set the model to FluxNLPModel
-#   nlp = FluxNLPModel(model, train_loader, test_loader; loss_f = loss)
-
-# #   mbatch = 64, #128     #TODO see if we need this , in future we can update the number of batch size in different epoch
-# #   mepoch = 10, # 100
-# #   verbose = -1,
-# #   atol::T = √eps(T),
-# #   rtol::T = √eps(T),
-# #   η1 = eps(T)^(1 / 4),
-# #   η2 = T(0.95),
-# #   γ1 = T(1 / 2),
-# #   γ2 = 1 / γ1,
-# #   σmin = zero(T),# change this
-# #   β::T = T(0),
-# #   max_time = Inf,
-#   stochastic_data = StochasticR2Data(0, 0, mepoch, [], [], [], [], atol)
-#   solver_stats = JSOSolvers.R2(
-#       nlp;
-#       atol = atol,
-#       rtol = rtol,
-#       η1 = η1,
-#       η2 = η2,
-#       γ1 = γ1,
-#       γ2 = γ2,
-#       σmin = σmin,
-#       β = β,
-#       max_time = max_time,
-#       verbose = verbose,
-#       callback = (nlp, solver, stats, nlp_param) ->
-#           cb(nlp, solver, stats, nlp_param, stochastic_data),
-#   )
-#   return stochastic_data
-
-# # logging
-# TBCallback(train_loader, test_loader, nlp.chain, epoch, device) #not sure to pass nlp.chain or fx
-# end
+  solver_stats = JSOSolvers.R2(
+    nlp;
+    atol = atol,
+    rtol = rtol,
+    η1 = η1,
+    η2 = η2,
+    γ1 = γ1,
+    γ2 = γ2,
+    σmin = σmin,
+    β = β,
+    max_time = max_time,
+    verbose = verbose,
+    callback = (nlp, solver, stats, nlp_param) ->
+      cb(nlp, solver, stats, nlp_param, train_loader, test_loader, device, stochastic_data),
+  )
+  return stochastic_data
+end
 
 ########################################################################
 ### Main File to Callback
 #if you want the train_flux
 if args.tblogger
-  tblogger = TBLogger(args.save_path * "train_flux-"* Dates.format(now(),"yyyy-mm-dd-H-M-S") , tb_overwrite) #TODO changing tblogger for each project 
+  tblogger =
+    TBLogger(args.save_path * "train_flux-" * Dates.format(now(), "yyyy-mm-dd-H-M-S"), tb_overwrite) #TODO changing tblogger for each project 
 end
 
 train_flux()
 if args.tblogger
-    close(tblogger)
-  end
+  close(tblogger)
+end
 
 if args.tblogger #TODO add timer to this 
-  tblogger = TBLogger(args.save_path * "train_FluxNLPModel_SGD-"* Dates.format(now(),"yyyy-mm-dd-H-M-S"), tb_overwrite) #TODO changing tblogger for each project 
+  tblogger = TBLogger(
+    args.save_path * "train_FluxNLPModel_SGD-" * Dates.format(now(), "yyyy-mm-dd-H-M-S"),
+    tb_overwrite,
+  ) #TODO changing tblogger for each project 
 end
 
 train_FluxNLPModel_SGD() #TODO this is slow
 if args.tblogger
-    close(tblogger)
-  end
+  close(tblogger)
+end
 
 # if args.tblogger
 #   tblogger = TBLogger(args.save_path * "train_FluxNlPModel_R2-"* Dates.format(now(),"yyyy-mm-dd-H-M-S"), tb_overwrite) #TODO changing tblogger for each project 
 # end
 
 # train_FluxNlPModel_R2()
-
 
 #closing the logger otherwise it will error out
 # if args.tblogger

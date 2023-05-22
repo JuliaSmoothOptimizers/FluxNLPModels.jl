@@ -48,10 +48,7 @@ Sets the vaiables and rebuild the chain
 function set_vars!(nlp::AbstractFluxNLPModel{T, S}, new_w::AbstractVector{T}) where {T <: Number, S} #TODO test T 
   nlp.w = new_w
   nlp.chain = nlp.rebuild(new_w)
-  
 end
-
-
 
 """
     flat_grad!(nlp,g)
