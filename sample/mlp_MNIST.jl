@@ -342,7 +342,7 @@ end
 ### Main File to Callback
 #if you want the train_flux
 if args.tblogger
-  tblogger = TBLogger(args.save_path * "train_flux", tb_overwrite) #TODO changing tblogger for each project 
+  tblogger = TBLogger(args.save_path * "train_flux-"* Dates.format(now(),"yyyy-mm-dd-H-M-S") , tb_overwrite) #TODO changing tblogger for each project 
 end
 
 train_flux()
@@ -351,7 +351,7 @@ if args.tblogger
   end
 
 if args.tblogger #TODO add timer to this 
-  tblogger = TBLogger(args.save_path * "train_FluxNLPModel_SGD", tb_overwrite) #TODO changing tblogger for each project 
+  tblogger = TBLogger(args.save_path * "train_FluxNLPModel_SGD-"* Dates.format(now(),"yyyy-mm-dd-H-M-S"), tb_overwrite) #TODO changing tblogger for each project 
 end
 
 train_FluxNLPModel_SGD() #TODO this is slow
@@ -360,7 +360,7 @@ if args.tblogger
   end
 
 # if args.tblogger
-#   tblogger = TBLogger(args.save_path * "train_FluxNlPModel_R2", tb_overwrite) #TODO changing tblogger for each project 
+#   tblogger = TBLogger(args.save_path * "train_FluxNlPModel_R2-"* Dates.format(now(),"yyyy-mm-dd-H-M-S"), tb_overwrite) #TODO changing tblogger for each project 
 # end
 
 # train_FluxNlPModel_R2()
