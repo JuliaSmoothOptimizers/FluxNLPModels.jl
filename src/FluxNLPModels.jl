@@ -37,6 +37,7 @@ mutable struct FluxNLPModel{T, S, C <: Chain, F <: Function} <: AbstractFluxNLPM
   test_minibatch_iterator
   current_training_minibatch
   current_test_minibatch
+  rebuild # this is used to create the rebuild of flat function 
   w::S
 end
 
@@ -55,7 +56,7 @@ function FluxNLPModel(
   size_minibatch::Int = 100,
   loss_f::F = Flux.mse, #Flux.crossentropy,
 ) where {T <: Chain, F <: Function}
-  x0, re = Flux.destructure(chain_ANN)
+  x0, rebuild = Flux.destructure(chain_ANN)
   n = length(x0)
   meta = NLPModelMeta(n, x0 = x0)
   if (isempty(data_train) || isempty(data_test))
@@ -84,6 +85,7 @@ function FluxNLPModel(
     test_minibatch_iterator,
     current_training_minibatch,
     current_test_minibatch,
+    rebuild,
     x0,
   )
 end

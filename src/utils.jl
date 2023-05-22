@@ -46,14 +46,12 @@ Compute the accuracy of the network `nlp.chain` on the entire test dataset.
 Sets the vaiables and rebuild the chain
 """
 function set_vars!(nlp::AbstractFluxNLPModel{T, S}, new_w::AbstractVector{T}) where {T <: Number, S} #TODO test T 
-
-  #Flattening 
-  old_w, rebuild = Flux.destructure(nlp.chain) #TODO IMPORTANT check what happens if it started with float32 and now I do float64
   nlp.w = new_w
-  # model two
-  nlp.chain = rebuild(new_w)
-  return old_w # return the old wieghts #TODO not sure if we need this but it would be good to keep track
+  nlp.chain = nlp.rebuild(new_w)
+  
 end
+
+
 
 """
     flat_grad!(nlp,g)

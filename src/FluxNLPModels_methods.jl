@@ -38,19 +38,14 @@ function NLPModels.grad!(
   @lencheck nlp.meta.nvar w g
   increment!(nlp, :neval_grad)
   set_vars!(nlp, w)
-  x, y = nlp.current_training_minibatch
-  param = Flux.params(nlp.chain)
-  gs = gradient(() -> nlp.loss_f(nlp.chain(x), y), param) # compute gradient  
 
-  i = 1
-  for p in param
-    buff, re = Flux.destructure(gs[p])
-    for item in buff
-      g[i] = item #g[i:buff.size] .= buff
-      i+=1
-    end
+  function local_loss(v::Vector)
+    set_vars!(nlp, v)
+    x, y = nlp.current_training_minibatch
+    nlp.loss_f(nlp.chain(x), y)
   end
-  return g
+  g = gradient(local_loss,w)
+  return g[1]
 end
 
 """
@@ -81,17 +76,12 @@ function NLPModels.objgrad!(
 
   x, y = nlp.current_training_minibatch
   f_w = nlp.loss_f(nlp.chain(x), y)
-
-  param = Flux.params(nlp.chain)
-  gs = gradient(() -> nlp.loss_f(nlp.chain(x), y), param) # compute gradient  #TODO maybe I use F_w
-  
-  i = 1
-  for p in param #TODO too slow
-    buff, re = Flux.destructure(gs[p])
-    for item in buff
-      g[i] = item 
-      i+=1
-    end
+  function local_loss(v::Vector)
+    set_vars!(nlp, v)
+    x, y = nlp.current_training_minibatch
+    nlp.loss_f(nlp.chain(x), y)
   end
-  return f_w, g
+  g = gradient(local_loss,w)
+
+  return f_w, g[1]
 end
