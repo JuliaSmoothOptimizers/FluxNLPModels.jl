@@ -174,7 +174,7 @@ end
 
 
 
-for myT in [Float16,Float32,Float64,Float32sr]
+for myT in [Float16,Float32,Float64,Float32sr] #SR fails ERROR: ArgumentError: Sampler for this object is not defined
 # for myT in [Float32]
     if args.tblogger #TODO add timer to this 
       global   tblogger = TBLogger(
