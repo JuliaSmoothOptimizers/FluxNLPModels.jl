@@ -16,6 +16,7 @@ using MLDatasets
 using Logging: with_logger
 using TensorBoardLogger: TBLogger, tb_overwrite
 using JSOSolvers
+using Dates
 
 # Genral functions 
 
@@ -141,7 +142,7 @@ function train_flux(; kws...)
   model = build_model() |> device
 
   ## Optimizer
-  opt = Flux.setup(Adam(args.η), model)
+  opt = Flux.setup(Flux.Descent(args.η), model)
 
   ## Training
   for epoch = 1:(args.epochs)
@@ -218,7 +219,7 @@ function cb(
   train_loader,
   test_loader,
   device,
-  param::AbstractParameterSet,
+#   param::AbstractParameterSet,
   data::StochasticR2Data,
 )
 
@@ -284,11 +285,11 @@ function train_FluxNlPModel_R2(;
   nlp = FluxNLPModel(model, train_loader, test_loader; loss_f = loss)
 
   #set the fist data sets
-  next = first(iter)
+  next = first(train_loader)
   (item, state) = next
   nlp.current_training_minibatch = device(item) # move to cpu or gpu
 
-  stochastic_data = StochasticR2Data(0, 1, mepoch, atol, state) # data.i =1
+  stochastic_data = StochasticR2Data(0, 1, args.epochs, atol, state) # data.i =1
 
   solver_stats = JSOSolvers.R2(
     nlp;
@@ -303,7 +304,7 @@ function train_FluxNlPModel_R2(;
     max_time = max_time,
     verbose = verbose,
     callback = (nlp, solver, stats, nlp_param) ->
-      cb(nlp, solver, stats, nlp_param, train_loader, test_loader, device, stochastic_data),
+      cb(nlp, solver, stats, train_loader, test_loader, device, stochastic_data),
   )
   return stochastic_data
 end
@@ -311,35 +312,35 @@ end
 ########################################################################
 ### Main File to Callback
 #if you want the train_flux
-if args.tblogger
-  tblogger =
-    TBLogger(args.save_path * "train_flux-" * Dates.format(now(), "yyyy-mm-dd-H-M-S"), tb_overwrite) #TODO changing tblogger for each project 
-end
-
-train_flux()
-if args.tblogger
-  close(tblogger)
-end
-
-if args.tblogger #TODO add timer to this 
-  tblogger = TBLogger(
-    args.save_path * "train_FluxNLPModel_SGD-" * Dates.format(now(), "yyyy-mm-dd-H-M-S"),
-    tb_overwrite,
-  ) #TODO changing tblogger for each project 
-end
-
-train_FluxNLPModel_SGD() #TODO this is slow
-if args.tblogger
-  close(tblogger)
-end
-
 # if args.tblogger
-#   tblogger = TBLogger(args.save_path * "train_FluxNlPModel_R2-"* Dates.format(now(),"yyyy-mm-dd-H-M-S"), tb_overwrite) #TODO changing tblogger for each project 
+#   tblogger =
+#     TBLogger(args.save_path * "train_flux-" * Dates.format(now(), "yyyy-mm-dd-H-M-S"), tb_overwrite) #TODO changing tblogger for each project 
 # end
 
-# train_FluxNlPModel_R2()
-
-#closing the logger otherwise it will error out
+# train_flux()
 # if args.tblogger
 #   close(tblogger)
 # end
+
+# if args.tblogger #TODO add timer to this 
+#   tblogger = TBLogger(
+#     args.save_path * "train_FluxNLPModel_SGD-" * Dates.format(now(), "yyyy-mm-dd-H-M-S"),
+#     tb_overwrite,
+#   ) #TODO changing tblogger for each project 
+# end
+
+# train_FluxNLPModel_SGD() #TODO this is slow
+# if args.tblogger
+#   close(tblogger)
+# end
+
+if args.tblogger
+  tblogger = TBLogger(args.save_path * "train_FluxNlPModel_R2-"* Dates.format(now(),"yyyy-mm-dd-H-M-S"), tb_overwrite) #TODO changing tblogger for each project 
+end
+
+train_FluxNlPModel_R2()
+
+# closing the logger otherwise it will error out
+if args.tblogger
+  close(tblogger)
+end
