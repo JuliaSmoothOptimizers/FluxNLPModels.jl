@@ -44,11 +44,11 @@ function getdata(args;T=Float32) #T for types
   return train_loader, test_loader
 end
 
-function build_model(; imgsize = (28, 28, 1), nclasses = 10,T=Float32)
+function build_model(; imgsize = (28, 28, 1), nclasses = 10,T=Float32) #TODO the rand fails for Float32sr make a new matrix then replace it 
 #   return Chain(Dense(prod(imgsize), 32, relu), Dense(32, nclasses))
     return Chain( #TODO important: when using Dense(matrix of random, dimention is transposed)
-        Dense(rand(T,32,prod(imgsize)),true, relu),
-        Dense(rand(T, nclasses,32),true) # The following is not correct : Dense(rand(T,32, nclasses),true) 
+        Dense(T.(rand(Float32,32,prod(imgsize))),true, relu), # I use this way to avoid rand error
+        Dense(T.(rand(Float32, nclasses,32)),true) # The following is not correct : Dense(rand(T,32, nclasses),true) 
         )
 end
 
@@ -61,16 +61,25 @@ const loss = logitcrossentropy
 # * The `build_model` function we defined above.
 # * A device object (in case we have a GPU available).
 
-function loss_and_accuracy(data_loader, model, device)
-  acc = 0
-  ls = 0.0f0
-  num = 0
+function loss_and_accuracy(data_loader, model, device,T)
+  acc = T(0)
+  ls = T(0.0f0)
+  num = T(0)
   for (x, y) in data_loader
     x, y = device(x), device(y)
+    println(typeof(x))
     ŷ = model(x)
-    ls += loss(ŷ, y, agg = sum)
+    println(typeof(ŷ))
+
+    ls += loss(ŷ, y, agg = sum)    
+    println(typeof(ls))
+
     acc += sum(onecold(ŷ) .== onecold(y)) ## Decode the output of the model
+    println(typeof(acc))
+
     num += size(x)[end]
+    println(typeof(num))
+
   end
   return ls / num, acc / num
 end
@@ -103,11 +112,11 @@ function fill_param_dict!(dict, m, prefix)
     end
 end
 
-function TBCallback(train_loader, test_loader, model, epoch, device)
+function TBCallback(train_loader, test_loader, model, epoch, device;T=Float32)
 
   ## Report on train and test
-  train_loss, train_acc = loss_and_accuracy(train_loader, model, device)
-  test_loss, test_acc = loss_and_accuracy(test_loader, model, device)
+  train_loss, train_acc = loss_and_accuracy(train_loader, model, device,T)
+  test_loss, test_acc = loss_and_accuracy(test_loader, model, device,T)
   println("Epoch=$epoch")
   println("  train_loss = $train_loss, train_accuracy = $train_acc")
   println("  test_loss = $test_loss, test_accuracy = $test_acc")
@@ -168,14 +177,14 @@ function train_FluxNLPModel_SGD(; T= Float32 ,kws...)
       FluxNLPModels.set_vars!(nlp, w_k) #TODO Not sure about this
     end
     # logging
-    TBCallback(train_loader, test_loader, nlp.chain, epoch, device) #not sure to pass nlp.chain or fx
+    TBCallback(train_loader, test_loader, nlp.chain, epoch, device;T=T) #not sure to pass nlp.chain or fx
   end
 end
 
 
 
-for myT in [Float16,Float32,Float64,Float32sr] #SR fails ERROR: ArgumentError: Sampler for this object is not defined
-# for myT in [Float32]
+# for myT in [Float16,Float32,Float64,Float32sr] #SR fails ERROR: ArgumentError: Sampler for this object is not defined
+for myT in [Float32sr]
     if args.tblogger #TODO add timer to this 
       global   tblogger = TBLogger(
             args.save_path * "/FluxNLPModel_SGD/_"*string(myT)*"_" * Dates.format(now(), "yyyy-mm-dd-H-M-S"),
