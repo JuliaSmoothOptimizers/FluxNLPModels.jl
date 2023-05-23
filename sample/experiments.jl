@@ -67,18 +67,18 @@ function loss_and_accuracy(data_loader, model, device,T)
   num = T(0)
   for (x, y) in data_loader
     x, y = device(x), device(y)
-    println(typeof(x))
+    # println(typeof(x))
     ŷ = model(x)
-    println(typeof(ŷ))
+    # println(typeof(ŷ))
 
     ls += loss(ŷ, y, agg = sum)    
-    println(typeof(ls))
+    # println(typeof(ls))
 
     acc += sum(onecold(ŷ) .== onecold(y)) ## Decode the output of the model
-    println(typeof(acc))
+    # println(typeof(acc))
 
     num += size(x)[end]
-    println(typeof(num))
+    # println(typeof(num))
 
   end
   return ls / num, acc / num
