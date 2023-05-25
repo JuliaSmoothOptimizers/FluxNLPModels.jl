@@ -161,7 +161,6 @@ function cb(
 
   # logging
   TBCallback(train_loader, test_loader, nlp.chain, data.epoch, device;T=myT) #not sure to pass nlp.chain or fx
-
   # Max epoch
   if data.epoch == data.max_epoch
     stats.status = :user
@@ -169,7 +168,7 @@ function cb(
   end
   iter = train_loader
   if data.i == 0
-    next = first(iter)
+    next = iterate(iter)
   else
     next = iterate(iter, data.state)
   end
@@ -180,13 +179,14 @@ function cb(
     data.epoch += 1
     return
   end
+
   (item, data.state) = next
   nlp.current_training_minibatch = device(item) # move to cpu or gpu
+
 end
 
 function train_FluxNlPModel_R2(;
   myT=Float32, #used to define the type
-  max_time = Inf,
   kws...,
 )
   args = Args(; kws...) ## Collect options in a struct for convenience
@@ -201,15 +201,16 @@ function train_FluxNlPModel_R2(;
   end
 
   #R2 parameter
-  verbose = -1,
-  atol = √eps(myT),
-  rtol = √eps(myT),
-  η1 = eps(myT)^(1 / 4),
-  η2 = myT(0.95),
-  γ1 = myT(1 / 2),
-  γ2 = 1 / γ1,
-  σmin = zero(myT),# change this
-  β = myT(0),
+  # verbose = -1,
+  atol = √eps(myT)
+  rtol = √eps(myT)
+  η1 = eps(myT)^(1 / 4)
+  η2 = myT(0.95)
+  γ1 = myT(1 / 2)
+  γ2 = 1 / γ1
+  σmin = zero(myT)# change this
+  β = myT(0)
+  max_time = Inf
 
   !ispath(args.save_path) && mkpath(args.save_path)
 
@@ -219,17 +220,16 @@ function train_FluxNlPModel_R2(;
   @info "Constructing model and starting training"
   ## Construct model
   model = build_model(T= myT) |> device
+  @info "The type of model  is " typeof(model)
 
   # now we set the model to FluxNLPModel
   nlp = FluxNLPModel(model, train_loader, test_loader; loss_f = loss)
+  @info "The type of nlp.w  is " typeof(nlp.w)
 
-  #set the fist data sets
-  next = first(train_loader)
-  (item, state) = next
+  # #set the fist data sets
+  item  = first(train_loader)
   nlp.current_training_minibatch = device(item) # move to cpu or gpu
-
-  stochastic_data = StochasticR2Data(0, 1, args.epochs, atol, state) # data.i =1
-
+  stochastic_data = StochasticR2Data(0, 1, args.epochs, atol, nothing) # data.i =0
   solver_stats = JSOSolvers.R2(
     nlp;
     atol = atol,
@@ -241,11 +241,11 @@ function train_FluxNlPModel_R2(;
     σmin = σmin,
     β = β,
     max_time = max_time,
-    verbose = verbose,
-    callback = (nlp, solver, stats, nlp_param) ->
-      cb(nlp, solver, stats, train_loader, test_loader, device, stochastic_data;myT=myT),
+    verbose = 1,
+    # callback = (nlp, solver, stats, nlp_param) ->
+      # cb(nlp, solver, stats, train_loader, test_loader, device, stochastic_data;myT=myT),
   )
-  return stochastic_data
+  # return stochastic_data
 end
 
 
@@ -256,15 +256,15 @@ end
 #       R2
 # ----------------------------------#
 
-for myT in [Float16,Float32,Float64,Float32sr] #SR fails ERROR: ArgumentError: Sampler for this object is not defined
-# for myT in [BigFloat]
+# for myT in [Float16,Float32,Float64,Float32sr] #SR fails ERROR: ArgumentError: Sampler for this object is not defined
+for myT in [Float32]
     if args.tblogger #TODO add timer to this 
       global   tblogger = TBLogger(
             args.save_path * "/FluxNLPModel_R2/_"*string(myT)*"_" * Dates.format(now(), "yyyy-mm-dd-H-M-S"),
             tb_overwrite,
         ) #TODO changing tblogger for each project 
     end
-    train_FluxNlPModel_R2(;T=myT) #TODO this is slow
+    train_FluxNlPModel_R2(;myT=myT) #TODO this is slow
     if args.tblogger
     close(tblogger)
     end

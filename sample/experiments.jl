@@ -20,6 +20,9 @@ using Dates
 using StochasticRounding
 
 
+using Quadmath # faster flor float128 than BigFloat
+
+
 
 # Genral functions 
 
@@ -186,7 +189,7 @@ end
 # ----------------------------------#
 
 # for myT in [Float16,Float32,Float64,Float32sr] #SR fails ERROR: ArgumentError: Sampler for this object is not defined
-for myT in [BigFloat]
+for myT in [Float128]
     if args.tblogger #TODO add timer to this 
       global   tblogger = TBLogger(
             args.save_path * "/FluxNLPModel_SGD/_"*string(myT)*"_" * Dates.format(now(), "yyyy-mm-dd-H-M-S"),
@@ -217,3 +220,7 @@ end
 
 # m16 = f16(m64)
 # println("type of the parameters", typeof.(Flux.params(m16))) 
+
+
+
+# set_bigfloat_precision(113)  BigFloat to float128
