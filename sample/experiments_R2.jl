@@ -136,9 +136,59 @@ args = Args() # collect options in a struct for convenience
 
 
 #########################################################################
-### SGD FluxNLPModels
+## R2 FluxNLPModels
 
-function train_FluxNLPModel_SGD(; T= Float32 ,kws...)
+# used in the callback of R2 for training deep learning model 
+mutable struct StochasticR2Data
+  epoch::Int
+  i::Int
+  # other fields as needed...
+  max_epoch::Int
+  ϵ::Float64 #TODO Fix with type T
+  state
+end
+
+function cb(
+  nlp,
+  solver,
+  stats,
+  train_loader,
+  test_loader,
+  device,
+  data::StochasticR2Data;
+  myT=Float32
+)
+
+  # logging
+  TBCallback(train_loader, test_loader, nlp.chain, data.epoch, device;T=myT) #not sure to pass nlp.chain or fx
+
+  # Max epoch
+  if data.epoch == data.max_epoch
+    stats.status = :user
+    return
+  end
+  iter = train_loader
+  if data.i == 0
+    next = first(iter)
+  else
+    next = iterate(iter, data.state)
+  end
+  data.i = 1 #flag to see if we are at first
+
+  if next === nothing #one epoch is finished
+    data.i = 0
+    data.epoch += 1
+    return
+  end
+  (item, data.state) = next
+  nlp.current_training_minibatch = device(item) # move to cpu or gpu
+end
+
+function train_FluxNlPModel_R2(;
+  myT=Float32, #used to define the type
+  max_time = Inf,
+  kws...,
+)
   args = Args(; kws...) ## Collect options in a struct for convenience
 
   if CUDA.functional() && args.use_cuda
@@ -150,70 +200,73 @@ function train_FluxNLPModel_SGD(; T= Float32 ,kws...)
     device = cpu
   end
 
+  #R2 parameter
+  verbose = -1,
+  atol = √eps(myT),
+  rtol = √eps(myT),
+  η1 = eps(myT)^(1 / 4),
+  η2 = myT(0.95),
+  γ1 = myT(1 / 2),
+  γ2 = 1 / γ1,
+  σmin = zero(myT),# change this
+  β = myT(0),
+
   !ispath(args.save_path) && mkpath(args.save_path)
 
   ## Create test and train dataloaders
-  train_loader, test_loader = getdata(args,T=T) #the type is chages
+  train_loader, test_loader = getdata(args,T=myT)
 
   @info "Constructing model and starting training"
   ## Construct model
-  model = build_model(T=T) |> device
+  model = build_model(T= myT) |> device
 
-  @info "The type of model  is " typeof(model)
-
-  # now we set the model to FluxNLPModel 
+  # now we set the model to FluxNLPModel
   nlp = FluxNLPModel(model, train_loader, test_loader; loss_f = loss)
-  g = similar(nlp.w) #TODO should they be here?
-  w_k = copy(nlp.w)
-  @info "The type of nlp.w  is " typeof(nlp.w)
 
-  for epoch = 1:(args.epochs)
-    for (x, y) in train_loader
-      x, y = device(x), device(y) ## transfer data to device
-      nlp.current_training_minibatch = (x, y)
-      g = NLPModels.grad(nlp, w_k)
-      w_k -= T(args.η) .* g      #   update the parameter
-      FluxNLPModels.set_vars!(nlp, w_k) #TODO Not sure about this
-    end
-    # logging
-    TBCallback(train_loader, test_loader, nlp.chain, epoch, device;T=T) #not sure to pass nlp.chain or fx
-  end
+  #set the fist data sets
+  next = first(train_loader)
+  (item, state) = next
+  nlp.current_training_minibatch = device(item) # move to cpu or gpu
+
+  stochastic_data = StochasticR2Data(0, 1, args.epochs, atol, state) # data.i =1
+
+  solver_stats = JSOSolvers.R2(
+    nlp;
+    atol = atol,
+    rtol = rtol,
+    η1 = η1,
+    η2 = η2,
+    γ1 = γ1,
+    γ2 = γ2,
+    σmin = σmin,
+    β = β,
+    max_time = max_time,
+    verbose = verbose,
+    callback = (nlp, solver, stats, nlp_param) ->
+      cb(nlp, solver, stats, train_loader, test_loader, device, stochastic_data;myT=myT),
+  )
+  return stochastic_data
 end
 
 
+
+
+
 # ----------------------------------#
-#       SGD
+#       R2
 # ----------------------------------#
 
-# for myT in [Float16,Float32,Float64,Float32sr] #SR fails ERROR: ArgumentError: Sampler for this object is not defined
-for myT in [BigFloat]
+for myT in [Float16,Float32,Float64,Float32sr] #SR fails ERROR: ArgumentError: Sampler for this object is not defined
+# for myT in [BigFloat]
     if args.tblogger #TODO add timer to this 
       global   tblogger = TBLogger(
-            args.save_path * "/FluxNLPModel_SGD/_"*string(myT)*"_" * Dates.format(now(), "yyyy-mm-dd-H-M-S"),
+            args.save_path * "/FluxNLPModel_R2/_"*string(myT)*"_" * Dates.format(now(), "yyyy-mm-dd-H-M-S"),
             tb_overwrite,
         ) #TODO changing tblogger for each project 
     end
-    train_FluxNLPModel_SGD(;T=myT) #TODO this is slow
+    train_FluxNlPModel_R2(;T=myT) #TODO this is slow
     if args.tblogger
     close(tblogger)
     end
 end
 
-
-# #TODO 
-# #changing the type from Float16 to Float64
-# parameters = Flux.params(predict)
-
-# println("type of the parameters", typeof.(parameters)) 
-
-# cfun(x::AbstractArray) = Float64.(x); 
-# cfun(x) = x; #Noop for stuff which is not arrays (e.g. activation functions)
-# m64 = Flux.fmap(cfun, predict);
-
-# println("type of the parameters", typeof.(Flux.params(m64))) 
-
-
-# f16(m) = Flux.paramtype(Float16, m) # similar to https://github.com/FluxML/Flux.jl/blob/d21460060e055dca1837c488005f6b1a8e87fa1b/src/functor.jl#L217
-
-# m16 = f16(m64)
-# println("type of the parameters", typeof.(Flux.params(m16))) 
