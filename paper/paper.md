@@ -1,32 +1,34 @@
 ---
-title: 'KnetNLPModels.jl: a bridge to apply smooth optimization solvers to neural networks training'
+# title: 'FluxNLPModels and KnetNLPModels.jl: Wrapper and connector for deep learning models into JSOSolvers.jl'
+Title: 'FluxNLPModels and KnetNLPModels.jl: Wrappers and Connectors for Deep Learning Models in JSOSolvers.jl'
+
 tags:
   - Julia
   - Machine learning
   - Smooth-optimization
 authors:
+    - name: Farhad Rahbarnia
+    corresponding: true
+    affiliation: 1
   - name: Paul Raynaud
     # orcid: 0000-0000-0000-0000
     equal-contrib: true
     affiliation: "1, 2" # (Multiple affiliations must be quoted)
-  - name: Farhad Rahbarnia
-    corresponding: true
-    affiliation: 1
-  - name: Nathan Allaire
-    corresponding: true # (This is how to denote the corresponding author)
-    affiliation: 1
+  # - name: Nathan Allaire
+  #   corresponding: true # (This is how to denote the corresponding author)
+  #   affiliation: 1
 affiliations:
  - name: GERAD, Montréal, Canada
    index: 1
  - name: GSCOP, Grenoble, France
    index: 2
-date: 6 December 2022
+date: 19 May 2023
 bibliography: paper.bib
 ---
 
 # Summary
-
-Deep neural network(DNN) modules, similar to the Julia module (ref) [Knet.jl](https://github.com/denizyuret/Knet.jl), are generally standalone modules whose provide:
+<!-- Edit one 
+Julia language supports many machine learning and more specifically deep learning (DL) libraries. Knet [Knet.jl](https://github.com/denizyuret/Knet.jl)  and Flux (ref) are among the top libraries that are used by practicitonrs of D and machine learning researchers. These packages generally designed to be a standalone modules which includes:
 - deep neural networks modelling;
 - support standard training and test datasets (from MLDatasets.jl in Julia);
 - several loss-functions, which may be evaluated from a mini-batch of a dataset;
@@ -34,14 +36,52 @@ Deep neural network(DNN) modules, similar to the Julia module (ref) [Knet.jl](ht
 - GPU support of any operation performed by a neural network;
 - state-of-the-art optimizers: SGD, Nesterov, Adagrad, Adam (refs), which are sophisticate stochastic line-search around first order derivatives of the loss-function.
 
+DL models and optimization can be seen as an unconstrained non-inear optimizations. However, usually Flux and Knet due to their standalone nature lack interfaces with pure optimization frameworks such as JSOSolver (ref). JSOSolvers expects the problem to be defined in a specific way as defined by [NLPModels](https://github.com/JuliaSmoothOptimizers/NLPModels.jl.). Turining DL models (espically the more complecated one) is a difficualt  and time consuming task for a users. 
 
-Due to their design focused on machine learning, those modules lack interfaces with pure optimization frameworks such as JSOSolver (ref).
-
-KnetNLPModels.jl tackles this issue by wrapping DNN into unconstrained models. It allows user to take advantage of the Knet's interfaces, such as:
+We introdue two packages: KnetNLPModels.jl and FluxNLPModels.jl which provide a wrapper for DL models for JSOSolvers unconstrained models. The user only need to call the wrapper object with their Dl models and sample inputs and outputs. It allows user to take advantage of the Knet's and Flux's interfaces, such as:
 - standard training and test datasets
-- its lost functions
+- several lost functions or user-defined
 - ability to divide datasets into user-defined-size minibatches
 - support GPU/CPU interface
+- different percisions
+- initilization routins for weights
+- TensorBoard.jl
+- exisiting sample benchmarks 
+- data preprosessing
+
+
+The interfaces for KnetNLPModels and FluxNLPModels differe slightly due to different functionallities they would have.   -->
+
+
+<!-- Edit 2 -->
+
+The Julia language supports various machine learning libraries, including [Knet.jl](https://github.com/denizyuret/Knet.jl) and Flux (reference), which are widely used by practitioners and researchers in deep learning and machine learning. These libraries offer standalone modules that encompass several features, such as deep neural network modeling, support for standard training and test datasets (via MLDatasets.jl in Julia), various loss functions evaluatable from dataset mini-batches, accuracy evaluation on test datasets, GPU support for neural network operations, and state-of-the-art optimizers like SGD, Nesterov, Adagrad, and Adam (references) that utilize sophisticated stochastic line search around first-order derivatives of the loss function.
+
+Deep learning models and optimization can be regarded as unconstrained nonlinear optimizations. However, Flux and Knet, given their standalone nature, lack interfaces with pure optimization frameworks like JSOSolver (reference). JSOSolvers expects problems to be defined in a specific manner as outlined by [NLPModels](https://github.com/JuliaSmoothOptimizers/NLPModels.jl). Training and using JSOSolvers for DL models, especially complex ones, can be a challenging and time-consuming task for users.
+
+To address this issue, we present two packages: KnetNLPModels.jl and FluxNLPModels.jl. These packages provide wrappers for DL models within JSOSolvers unconstrained models. Users only need to call the wrapper object with their DL models, sample inputs, and outputs. This approach allows users to leverage the interfaces provided by Knet and Flux, including standard training and test datasets, multiple predefined or user-defined loss functions, the ability to partition datasets into user-defined minibatches, GPU/CPU support, different precisions, weight initialization routines, TensorBoard.jl integration, existing sample benchmarks, and data preprocessing capabilities.
+
+The interfaces of KnetNLPModels and FluxNLPModels differ slightly to accommodate their respective functionalities.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 <!-- KnetNLPModels.jl tackles this issue by implementing a KnetNLPModel, an unconstrained smooth optimization model. -->
 
