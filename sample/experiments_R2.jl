@@ -44,17 +44,26 @@ function getdata(args;T=Float32) #T for types
   return train_loader, test_loader
 end
 
+# function build_model(; imgsize = (28, 28, 1), nclasses = 10,T=Float32) #TODO the rand fails for Float32sr make a new matrix then replace it 
+#     return Chain( #TODO important: when using Dense(matrix of random, dimention is transposed)
+#         Dense(T.(rand(Float32,32,prod(imgsize))),true, relu), # I use this way to avoid rand error
+#         Dense(T.(rand(Float32, nclasses,32)),true) # The following is not correct : Dense(rand(T,32, nclasses),true) 
+#         )
+# end
+
 function build_model(; imgsize = (28, 28, 1), nclasses = 10,T=Float32) #TODO the rand fails for Float32sr make a new matrix then replace it 
-    return Chain( #TODO important: when using Dense(matrix of random, dimention is transposed)
-        Dense(T.(rand(Float32,32,prod(imgsize))),true, relu), # I use this way to avoid rand error
-        Dense(T.(rand(Float32, nclasses,32)),true) # The following is not correct : Dense(rand(T,32, nclasses),true) 
-        )
+  return Chain( #TODO important: when using Dense(matrix of random, dimention is transposed)
+      Dense(T.(zeros(Float32,32,prod(imgsize))),true, relu), # I use this way to avoid rand error
+      Dense(T.(zeros(Float32, nclasses,32)),true) # The following is not correct : Dense(rand(T,32, nclasses),true) 
+      )
 end
+
 
 # Note that we use the functions [Dense](https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.Dense) so that our model is *densely* (or fully) connected and [Chain](https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.Chain) to chain the computation of the three layers.
 
 # ## Loss function
 const loss = logitcrossentropy
+const loss2 = Flux.mse
 # Now, we define the loss function `loss_and_accuracy`. It expects the following arguments:
 # * ADataLoader object.
 # * The `build_model` function we defined above.
@@ -202,9 +211,9 @@ function train_FluxNlPModel_R2(;
 
   #R2 parameter
   # verbose = -1,
-  atol = √eps(myT)
-  rtol = √eps(myT)
-  η1 = eps(myT)^(1 / 4)
+  atol = eps(myT)
+  rtol = eps(myT)
+  η1 = myT(0.0001)
   η2 = myT(0.95)
   γ1 = myT(1 / 2)
   γ2 = 1 / γ1
@@ -223,25 +232,26 @@ function train_FluxNlPModel_R2(;
   @info "The type of model  is " typeof(model)
 
   # now we set the model to FluxNLPModel
-  nlp = FluxNLPModel(model, train_loader, test_loader; loss_f = loss)
+  nlp = FluxNLPModel(model, train_loader, test_loader; loss_f = loss) #TODO add the device here for the data mini-batch
   @info "The type of nlp.w  is " typeof(nlp.w)
 
   # #set the fist data sets
   item  = first(train_loader)
   nlp.current_training_minibatch = device(item) # move to cpu or gpu
   stochastic_data = StochasticR2Data(0, 1, args.epochs, atol, nothing) # data.i =0
-  solver_stats = JSOSolvers.R2(
+  solver_stats = JSOSolvers.lbfgs(
     nlp;
-    atol = atol,
-    rtol = rtol,
-    η1 = η1,
-    η2 = η2,
-    γ1 = γ1,
-    γ2 = γ2,
-    σmin = σmin,
-    β = β,
-    max_time = max_time,
-    verbose = 1,
+    # atol = atol,
+    # rtol = rtol,
+    # η1 = η1,
+    # η2 = η2,
+    # γ1 = γ1,
+    # γ2 = γ2,
+    # σmin = σmin,
+    # β = β,
+    # max_time = max_time,
+    verbose = 5,
+    max_iter= 120,
     # callback = (nlp, solver, stats, nlp_param) ->
       # cb(nlp, solver, stats, train_loader, test_loader, device, stochastic_data;myT=myT),
   )
@@ -257,16 +267,16 @@ end
 # ----------------------------------#
 
 # for myT in [Float16,Float32,Float64,Float32sr] #SR fails ERROR: ArgumentError: Sampler for this object is not defined
-for myT in [Float32]
-    if args.tblogger #TODO add timer to this 
-      global   tblogger = TBLogger(
-            args.save_path * "/FluxNLPModel_R2/_"*string(myT)*"_" * Dates.format(now(), "yyyy-mm-dd-H-M-S"),
-            tb_overwrite,
-        ) #TODO changing tblogger for each project 
-    end
+for myT in [Float64]
+    # if args.tblogger #TODO add timer to this 
+    #   global   tblogger = TBLogger(
+    #         args.save_path * "/FluxNLPModel_R2/_"*string(myT)*"_" * Dates.format(now(), "yyyy-mm-dd-H-M-S"),
+    #         tb_overwrite,
+    #     ) #TODO changing tblogger for each project 
+    # end
     train_FluxNlPModel_R2(;myT=myT) #TODO this is slow
-    if args.tblogger
-    close(tblogger)
-    end
+    # if args.tblogger
+    # close(tblogger)
+    # end
 end
 

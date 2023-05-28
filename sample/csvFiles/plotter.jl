@@ -17,7 +17,7 @@ plot!(epochs, accuracy_float32sr, label="Float32SR")
 plot!(epochs, accuracy_float64, label="Float64")
 
 xlabel!("Epoch")
-title!("Test set Accuracy vs. Epoch")
+title!("Accuracy vs. Epoch")
 ylabel!("Accuracy")
 plot!(legend=:outerbottom, legendcolumns=4)
 # ylabel!("Loss")
