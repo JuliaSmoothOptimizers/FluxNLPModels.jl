@@ -54,16 +54,28 @@ The interfaces for KnetNLPModels and FluxNLPModels differe slightly due to diffe
 
 
 <!-- Edit 2 -->
-
+<!-- 
 The Julia language supports various machine learning libraries, including [Knet.jl](https://github.com/denizyuret/Knet.jl) and Flux (reference), which are widely used by practitioners and researchers in deep learning and machine learning. These libraries offer standalone modules that encompass several features, such as deep neural network modeling, support for standard training and test datasets (via MLDatasets.jl in Julia), various loss functions evaluatable from dataset mini-batches, accuracy evaluation on test datasets, GPU support for neural network operations, and state-of-the-art optimizers like SGD, Nesterov, Adagrad, and Adam (references) that utilize sophisticated stochastic line search around first-order derivatives of the loss function.
 
 Deep learning models and optimization can be regarded as unconstrained nonlinear optimizations. However, Flux and Knet, given their standalone nature, lack interfaces with pure optimization frameworks like JSOSolver (reference). JSOSolvers expects problems to be defined in a specific manner as outlined by [NLPModels](https://github.com/JuliaSmoothOptimizers/NLPModels.jl). Training and using JSOSolvers for DL models, especially complex ones, can be a challenging and time-consuming task for users.
 
 To address this issue, we present two packages: KnetNLPModels.jl and FluxNLPModels.jl. These packages provide wrappers for DL models within JSOSolvers unconstrained models. Users only need to call the wrapper object with their DL models, sample inputs, and outputs. This approach allows users to leverage the interfaces provided by Knet and Flux, including standard training and test datasets, multiple predefined or user-defined loss functions, the ability to partition datasets into user-defined minibatches, GPU/CPU support, different precisions, weight initialization routines, TensorBoard.jl integration, existing sample benchmarks, and data preprocessing capabilities.
 
-The interfaces of KnetNLPModels and FluxNLPModels differ slightly to accommodate their respective functionalities.
+The interfaces of KnetNLPModels and FluxNLPModels differ slightly to accommodate their respective functionalities. -->
 
+<!-- Edit 3
+ -->
+Several deep learning (DL) libraries have been developed for the Julia language, including [Knet.jl](https://github.com/denizyuret/Knet.jl), and [Flux.jl](reference). Both are widely used by practitioners and researchers in deep learning and machine learning (this needs a reference or a measure to back up the statement). Those libraries offer facilities for deep neural network modeling, access to standard training and test datasets (via MLDatasets.jl, among others), various loss functions that may be evaluated on dataset mini batches, accuracy evaluation facilities on test datasets, GPU support for neural network operations, and state-of-the-art optimizers, including the stochastic gradient method, Nesterov acceleration, Adagrad, and Adam (references) that rely solely on first derivatives of the sampled loss.
 
+Deep network training can be regarded as an unconstrained nonlinear optimization problem. However, DL libraries, including Knet.jl and Flux.jl, given their standalone nature and the traditional nature of stochastic algorithms, lack interfaces with general optimization frameworks such as [JSOSolvers.jl](reference) in which descent of a certain objective is enforced. JSOSolvers.jl expects a model to be conform to the [NLPModels.jl](https://github.com/JuliaSmoothOptimizers/NLPModels.jl) API.
+
+*Training and using JSOSolvers.jl for DL models, especially complex ones, can be a challenging and time-consuming task for users.* (I don’t understand what this means)
+
+We present two packages, KnetNLPModels.jl and FluxNLPModels.jl, that expose DL models as optimization problems conforming to the NLPModels.jl API. Users instantiate a model using a deep network, sample inputs, and outputs. Sampled objective value and gradient are evaluated using the facilities included in Knet.jl and Flux.jl. This approach allows users to leverage the interfaces provided by the DL libraries, including standard training and test datasets, predefined or user-defined loss functions, the ability to partition datasets into user-defined minibatches, GPU/CPU support, use of various floating-point systems, weight initialization routines, [TensorBoard.jl](link) integration, existing sample benchmarks, and data preprocessing capabilities.
+
+We hope the decoupling of the modeling tool from the optimization solvers will allow users and researchers to employ a wide variety of optimization solvers, including a range of existing solvers not traditionally applied to deep network training.
+
+*We still need some statements saying that we did just that and comment on the numerical results as compared to SG or another method.*
 
 
 
