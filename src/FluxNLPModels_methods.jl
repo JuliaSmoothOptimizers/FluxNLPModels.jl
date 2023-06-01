@@ -37,15 +37,34 @@ function NLPModels.grad!(
 ) where {T, S}
   @lencheck nlp.meta.nvar w g
   increment!(nlp, :neval_grad)
+  
+  
   set_vars!(nlp, w)
+  x, y = nlp.current_training_minibatch
+  param = Flux.params(nlp.chain)
+  gs = gradient(() -> nlp.loss_f(nlp.chain(x), y), param) # compute gradient  
 
-  function local_loss(v::Vector)
-    set_vars!(nlp, v)
-    x, y = nlp.current_training_minibatch
-    nlp.loss_f(nlp.chain(x), y)
+  i = 1
+  j= 1
+  for p in param
+    buff, re = Flux.destructure(gs[p])
+    j = i + size(buff)[1]
+    g[i:j-1 ] = buff
+    i = j+1
+    
   end
-  g = gradient(local_loss, w)
-  return g[1]
+  return g
+
+
+
+  # function local_loss(v::Vector)
+  #   set_vars!(nlp, v)
+  #   x, y = nlp.current_training_minibatch
+    
+  #   nlp.loss_f(nlp.chain(x), y)
+  # end
+  # g = gradient(local_loss, w)
+  # return g[1]
 end
 
 """
