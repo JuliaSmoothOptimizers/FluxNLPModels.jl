@@ -20,11 +20,10 @@ using TensorBoardLogger: TBLogger, tb_overwrite
 using JSOSolvers
 using Dates
 using StochasticRounding
+using LinearAlgebra
 
 
-myT = Float32
-# Genral functions 
-
+myT = Float64
 function getdata(args;T=Float32) #T for types
   ENV["DATADEPS_ALWAYS_ACCEPT"] = "true"
 
@@ -46,13 +45,6 @@ function getdata(args;T=Float32) #T for types
   return train_loader, test_loader
 end
 
-# function build_model(; imgsize = (28, 28, 1), nclasses = 10,T=Float32) #TODO the rand fails for Float32sr make a new matrix then replace it 
-#     return Chain( #TODO important: when using Dense(matrix of random, dimention is transposed)
-#         Dense(T.(rand(Float32,32,prod(imgsize))),true, relu), # I use this way to avoid rand error
-#         Dense(T.(rand(Float32, nclasses,32)),true) # The following is not correct : Dense(rand(T,32, nclasses),true) 
-#         )
-# end
-
 function build_model(; imgsize = (28, 28, 1), nclasses = 10,T=Float32) #TODO the rand fails for Float32sr make a new matrix then replace it 
   return Chain( #TODO important: when using Dense(matrix of random, dimention is transposed)
       Dense(T.(zeros(Float32,32,prod(imgsize))),true, relu), # I use this way to avoid rand error
@@ -66,10 +58,6 @@ end
 # ## Loss function
 const loss = logitcrossentropy
 const loss2 = Flux.mse
-# Now, we define the loss function `loss_and_accuracy`. It expects the following arguments:
-# * ADataLoader object.
-# * The `build_model` function we defined above.
-# * A device object (in case we have a GPU available).
 
 function loss_and_accuracy(data_loader, model, device,T)
   acc = T(0)
@@ -107,38 +95,72 @@ end
 
 
 args = Args() ## Collect options in a struct for convenience
-
-    device = cpu
-  
+device = cpu
 
 
 
-  ## Create test and train dataloaders
-  train_loader, test_loader = getdata(args,T=myT)
 
-  @info "Constructing model and starting training"
-  ## Construct model
-  model = build_model(T= myT) |> device
-  @info "The type of model  is " typeof(model)
+## Create test and train dataloaders
+train_loader, test_loader = getdata(args,T=myT)
 
-  # now we set the model to FluxNLPModel
-  nlp = FluxNLPModel(model, train_loader, test_loader; loss_f = loss) #TODO add the device here for the data mini-batch
-  @info "The type of nlp.w  is " typeof(nlp.w)
+@info "Constructing model and starting training"
+## Construct model
+model = build_model(T= myT) |> device
+@info "The type of model  is " typeof(model)
+
+# now we set the model to FluxNLPModel
+nlp = FluxNLPModel(model, train_loader, test_loader; loss_f = loss) #TODO add the device here for the data mini-batch
+@info "The type of nlp.w  is " typeof(nlp.w)
 
 
-x = similar(nlp.meta.x0)
+x = copy(nlp.meta.x0)
 ∇fk= similar(nlp.meta.x0)
 c= 0
 
 while c<10
-    # ∇fk= NLPModels.grad(nlp, x)       
+  # ∇fk= NLPModels.grad(nlp, x)       
+    gk= NLPModels.grad(nlp, x)   
+    # ∇fk= similar(nlp.meta.x0)
+    
     grad!(nlp, x, ∇fk)
+
+    
     x .= x .- (∇fk)
 
     norm_∇fk = norm(∇fk)
+    norm_gk= norm(gk)
+
     c= c+1;
-    println(norm_∇fk)
+    println(norm_∇fk,"-------------", norm_gk)
 end
+
+
+
+# #######################################################
+# w1, re = Flux.destructure(model)
+# x, y = first(train_loader)
+
+# function local_L(rebuld,x,y, w::AbstractVector{T}) where {T}
+#   # increment!(nlp, :neval_obj) #TODO not sure 
+#   # set_vars!(nlp, w)
+#   chain = rebuld(w)
+ 
+#   return loss(chain(x), y)
+# end
+
+
+# c= 0
+
+# while c<10
+#   g = gradient(w_g->local_L(re,x,y, w_g) , w1);
+
+#   println(norm(g[1])) 
+#   w1 .= w1 .- g[1];
+#   c=c+1
+# end
+
+
+
 
 
 

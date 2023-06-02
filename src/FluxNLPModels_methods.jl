@@ -37,18 +37,13 @@ function NLPModels.grad!(
 ) where {T, S}
   @lencheck nlp.meta.nvar w g
   increment!(nlp, :neval_grad)
+  x, y = nlp.current_training_minibatch
  
-  g = gradient(w_g->local_loss(nlp, w_g) , w)
-  return g[1]
+  g .= gradient(w_g->local_loss(nlp, x,y, w_g) , w)[1]
+  return g
 end
 
-function local_loss(nlp::AbstractFluxNLPModel{T, S}, w::AbstractVector{T}) where {T, S}
-  # increment!(nlp, :neval_obj) #TODO not sure 
-  set_vars!(nlp, w)
-  x, y = nlp.current_training_minibatch
-  f_w = nlp.loss_f(nlp.chain(x), y)
-  return f_w
-end
+
 
 
 
@@ -81,7 +76,7 @@ function NLPModels.objgrad!(
   x, y = nlp.current_training_minibatch
   f_w = nlp.loss_f(nlp.chain(x), y)
 
-  g = gradient(w_g->local_loss(nlp, w_g) , w)
+  g .= gradient(w_g->local_loss(nlp,x,y, w_g) , w)[1]
 
-  return f_w, g[1]
+  return f_w, g
 end
