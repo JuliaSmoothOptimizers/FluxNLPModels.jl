@@ -131,8 +131,8 @@ x = similar(nlp.meta.x0)
 c= 0
 
 while c<10
-    ∇fk= NLPModels.grad(nlp, x)       
-    # grad!(nlp, x, ∇fk)
+    # ∇fk= NLPModels.grad(nlp, x)       
+    grad!(nlp, x, ∇fk)
     x .= x .- (∇fk)
 
     norm_∇fk = norm(∇fk)
@@ -154,3 +154,41 @@ end
 #   grad!(nlp, x, g)
 #   return f, g
 # end
+
+
+
+# julia> function pow(x, n)
+#          r = 1
+#          for i = 1:n
+#            r *= x
+#          end
+#          return r
+#        end
+# pow (generic function with 1 method)
+
+# julia> gradient(x -> pow(x, 3), 5)
+# (75.0,)
+
+# julia> pow2(x, n) = n <= 0 ? 1 : x*pow2(x, n-1)
+# pow2 (generic function with 1 method)
+
+# julia> gradient(x -> pow2(x, 3), 5)
+
+
+
+
+  # set_vars!(nlp, w)
+  # x, y = nlp.current_training_minibatch
+  # param = Flux.params(nlp.chain)
+  # gs = gradient(() -> nlp.loss_f(nlp.chain(x), y), param) # compute gradient  
+
+  # i = 1
+  # j= 1
+  # for p in param
+  #   buff, re = Flux.destructure(gs[p])
+  #   j = i + size(buff)[1]
+  #   g[i:j-1 ] = buff
+  #   i = j+1
+    
+  # end
+  # return g

@@ -37,35 +37,20 @@ function NLPModels.grad!(
 ) where {T, S}
   @lencheck nlp.meta.nvar w g
   increment!(nlp, :neval_grad)
-  
-  
+ 
+  g = gradient(w_g->local_loss(nlp, w_g) , w)
+  return g[1]
+end
+
+function local_loss(nlp::AbstractFluxNLPModel{T, S}, w::AbstractVector{T}) where {T, S}
+  # increment!(nlp, :neval_obj) #TODO not sure 
   set_vars!(nlp, w)
   x, y = nlp.current_training_minibatch
-  param = Flux.params(nlp.chain)
-  gs = gradient(() -> nlp.loss_f(nlp.chain(x), y), param) # compute gradient  
-
-  i = 1
-  j= 1
-  for p in param
-    buff, re = Flux.destructure(gs[p])
-    j = i + size(buff)[1]
-    g[i:j-1 ] = buff
-    i = j+1
-    
-  end
-  return g
-
-
-
-  # function local_loss(v::Vector)
-  #   set_vars!(nlp, v)
-  #   x, y = nlp.current_training_minibatch
-    
-  #   nlp.loss_f(nlp.chain(x), y)
-  # end
-  # g = gradient(local_loss, w)
-  # return g[1]
+  f_w = nlp.loss_f(nlp.chain(x), y)
+  return f_w
 end
+
+
 
 """
     objgrad!(nlp, x, g)
@@ -95,12 +80,8 @@ function NLPModels.objgrad!(
 
   x, y = nlp.current_training_minibatch
   f_w = nlp.loss_f(nlp.chain(x), y)
-  function local_loss(v::Vector)
-    set_vars!(nlp, v)
-    x, y = nlp.current_training_minibatch
-    nlp.loss_f(nlp.chain(x), y)
-  end
-  g = gradient(local_loss, w)
+
+  g = gradient(w_g->local_loss(nlp, w_g) , w)
 
   return f_w, g[1]
 end
