@@ -239,7 +239,7 @@ function train_FluxNlPModel_R2(;
   item  = first(train_loader)
   nlp.current_training_minibatch = device(item) # move to cpu or gpu
   stochastic_data = StochasticR2Data(0, 1, args.epochs, atol, nothing) # data.i =0
-  solver_stats = JSOSolvers.lbfgs(
+  solver_stats = JSOSolvers.R2(
     nlp;
     # atol = atol,
     # rtol = rtol,
@@ -251,7 +251,7 @@ function train_FluxNlPModel_R2(;
     # β = β,
     # max_time = max_time,
     verbose = 5,
-    max_iter= 120,
+    max_iter= 250,
     # callback = (nlp, solver, stats, nlp_param) ->
       # cb(nlp, solver, stats, train_loader, test_loader, device, stochastic_data;myT=myT),
   )
