@@ -75,19 +75,10 @@ function loss_and_accuracy(data_loader, model, device,T)
   num = T(0)
   for (x, y) in data_loader
     x, y = device(x), device(y)
-    # println(typeof(x))
     ŷ = model(x)
-    # println(typeof(ŷ))
-
     ls += loss(ŷ, y, agg = sum)    
-    # println(typeof(ls))
-
     acc += sum(onecold(ŷ) .== onecold(y)) ## Decode the output of the model
-    # println(typeof(acc))
-
     num += size(x)[end]
-    # println(typeof(num))
-
   end
   return ls / num, acc / num
 end
@@ -169,7 +160,7 @@ function cb(
 )
 
   # logging
-  TBCallback(train_loader, test_loader, nlp.chain, data.epoch, device;T=myT) #not sure to pass nlp.chain or fx
+  # TBCallback(train_loader, test_loader, nlp.chain, data.epoch, device;T=myT) #not sure to pass nlp.chain or fx
   # Max epoch
   if data.epoch == data.max_epoch
     stats.status = :user
@@ -178,12 +169,15 @@ function cb(
   iter = train_loader
   if data.i == 0
     next = iterate(iter)
+  elseif data.i %  5 !=0
+    return 
   else
     next = iterate(iter, data.state)
   end
-  data.i = 1 #flag to see if we are at first
+  data.i += 1 #flag to see if we are at first
 
   if next === nothing #one epoch is finished
+    @info "Epoch", data.epoch
     data.i = 0
     data.epoch += 1
     return
@@ -191,6 +185,7 @@ function cb(
 
   (item, data.state) = next
   nlp.current_training_minibatch = device(item) # move to cpu or gpu
+  # @info "The data "
 
 end
 
@@ -211,13 +206,13 @@ function train_FluxNlPModel_R2(;
 
   #R2 parameter
   # verbose = -1,
-  atol = eps(myT)
-  rtol = eps(myT)
-  η1 = myT(0.0001)
+  atol = myT(0.003) #eps(myT)
+  rtol = myT(0.003) #eps(myT)
+  η1 = myT(0.01)
   η2 = myT(0.95)
   γ1 = myT(1 / 2)
   γ2 = 1 / γ1
-  σmin = zero(myT)# change this
+  σmin = rand(myT)#zero(myT)# change this
   β = myT(0)
   max_time = Inf
 
@@ -238,22 +233,21 @@ function train_FluxNlPModel_R2(;
   # #set the fist data sets
   item  = first(train_loader)
   nlp.current_training_minibatch = device(item) # move to cpu or gpu
-  stochastic_data = StochasticR2Data(0, 1, args.epochs, atol, nothing) # data.i =0
+  stochastic_data = StochasticR2Data(0, 0, args.epochs, atol, nothing) # data.i =0
   solver_stats = JSOSolvers.R2(
     nlp;
-    # atol = atol,
-    # rtol = rtol,
-    # η1 = η1,
-    # η2 = η2,
-    # γ1 = γ1,
-    # γ2 = γ2,
-    # σmin = σmin,
-    # β = β,
-    # max_time = max_time,
-    verbose = 5,
-    max_iter= 250,
-    # callback = (nlp, solver, stats, nlp_param) ->
-      # cb(nlp, solver, stats, train_loader, test_loader, device, stochastic_data;myT=myT),
+    atol = atol,
+    rtol = rtol,
+    η1 = η1,
+    η2 = η2,
+    γ1 = γ1,
+    γ2 = γ2,
+    σmin = σmin,
+    β = β,
+    max_time = max_time,
+    verbose = 2,
+    max_iter= 2000,
+    callback = (nlp, solver, stats) -> cb(nlp, solver, stats, train_loader, test_loader, device, stochastic_data; myT=myT),
   )
   # return stochastic_data
 end
