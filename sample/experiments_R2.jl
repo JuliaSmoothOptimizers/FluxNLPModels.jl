@@ -44,19 +44,19 @@ function getdata(args;T=Float32) #T for types
   return train_loader, test_loader
 end
 
-# function build_model(; imgsize = (28, 28, 1), nclasses = 10,T=Float32) #TODO the rand fails for Float32sr make a new matrix then replace it 
-#     return Chain( #TODO important: when using Dense(matrix of random, dimention is transposed)
-#         Dense(T.(rand(Float32,32,prod(imgsize))),true, relu), # I use this way to avoid rand error
-#         Dense(T.(rand(Float32, nclasses,32)),true) # The following is not correct : Dense(rand(T,32, nclasses),true) 
-#         )
-# end
-
 function build_model(; imgsize = (28, 28, 1), nclasses = 10,T=Float32) #TODO the rand fails for Float32sr make a new matrix then replace it 
-  return Chain( #TODO important: when using Dense(matrix of random, dimention is transposed)
-      Dense(T.(zeros(Float32,32,prod(imgsize))),true, relu), # I use this way to avoid rand error
-      Dense(T.(zeros(Float32, nclasses,32)),true) # The following is not correct : Dense(rand(T,32, nclasses),true) 
-      )
+    return Chain( #TODO important: when using Dense(matrix of random, dimention is transposed)
+        Dense(T.(rand(Float32,32,prod(imgsize))),true, relu), # I use this way to avoid rand error
+        Dense(T.(rand(Float32, nclasses,32)),true) # The following is not correct : Dense(rand(T,32, nclasses),true) 
+        )
 end
+
+# function build_model(; imgsize = (28, 28, 1), nclasses = 10,T=Float32) #TODO the rand fails for Float32sr make a new matrix then replace it 
+#   return Chain( #TODO important: when using Dense(matrix of random, dimention is transposed)
+#       Dense(T.(zeros(Float32,32,prod(imgsize))),true, relu), # I use this way to avoid rand error
+#       Dense(T.(zeros(Float32, nclasses,32)),true) # The following is not correct : Dense(rand(T,32, nclasses),true) 
+#       )
+# end
 
 
 # Note that we use the functions [Dense](https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.Dense) so that our model is *densely* (or fully) connected and [Chain](https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.Chain) to chain the computation of the three layers.
@@ -116,9 +116,9 @@ function TBCallback(train_loader, test_loader, model, epoch, device;T=Float32)
   ## Report on train and test
   train_loss, train_acc = loss_and_accuracy(train_loader, model, device,T)
   test_loss, test_acc = loss_and_accuracy(test_loader, model, device,T)
-  println("Epoch=$epoch")
-  println("  train_loss = $train_loss, train_accuracy = $train_acc")
-  println("  test_loss = $test_loss, test_accuracy = $test_acc")
+  # println("Epoch=$epoch")
+  # println("  train_loss = $train_loss, train_accuracy = $train_acc")
+  # println("  test_loss = $test_loss, test_accuracy = $test_acc")
 
   param_dict = Dict{String, Any}()
   fill_param_dict!(param_dict, model, "")
@@ -160,7 +160,7 @@ function cb(
 )
 
   # logging
-  # TBCallback(train_loader, test_loader, nlp.chain, data.epoch, device;T=myT) #not sure to pass nlp.chain or fx
+  TBCallback(train_loader, test_loader, nlp.chain, data.epoch, device;T=myT) #not sure to pass nlp.chain or fx
   # Max epoch
   if data.epoch == data.max_epoch
     stats.status = :user
@@ -206,13 +206,14 @@ function train_FluxNlPModel_R2(;
 
   #R2 parameter
   # verbose = -1,
-  atol = myT(0.003) #eps(myT)
-  rtol = myT(0.003) #eps(myT)
-  η1 = myT(0.01)
-  η2 = myT(0.95)
+  atol = myT(0.001) #eps(myT)
+  rtol = myT(0.001) #eps(myT)
+  η1 = myT(1e-4)
+  η2 = myT(0.9)
   γ1 = myT(1 / 2)
   γ2 = 1 / γ1
-  σmin = rand(myT)#zero(myT)# change this
+  σmin = zero(myT)#rand(myT)#zero(myT)# change this
+  # β = myT(0.9)
   β = myT(0)
   max_time = Inf
 
@@ -245,8 +246,8 @@ function train_FluxNlPModel_R2(;
     σmin = σmin,
     β = β,
     max_time = max_time,
-    verbose = 2,
-    max_iter= 2000,
+    verbose = 1,
+    max_iter= 3000,
     callback = (nlp, solver, stats) -> cb(nlp, solver, stats, train_loader, test_loader, device, stochastic_data; myT=myT),
   )
   # return stochastic_data
@@ -262,15 +263,15 @@ end
 
 # for myT in [Float16,Float32,Float64,Float32sr] #SR fails ERROR: ArgumentError: Sampler for this object is not defined
 for myT in [Float64]
-    # if args.tblogger #TODO add timer to this 
-    #   global   tblogger = TBLogger(
-    #         args.save_path * "/FluxNLPModel_R2/_"*string(myT)*"_" * Dates.format(now(), "yyyy-mm-dd-H-M-S"),
-    #         tb_overwrite,
-    #     ) #TODO changing tblogger for each project 
-    # end
+    if args.tblogger #TODO add timer to this 
+      global   tblogger = TBLogger(
+            args.save_path * "/FluxNLPModel_R2/_"*string(myT)*"_" * Dates.format(now(), "yyyy-mm-dd-H-M-S"),
+            tb_overwrite,
+        ) #TODO changing tblogger for each project 
+    end
     train_FluxNlPModel_R2(;myT=myT) #TODO this is slow
-    # if args.tblogger
-    # close(tblogger)
-    # end
+    if args.tblogger
+    close(tblogger)
+    end
 end
 
