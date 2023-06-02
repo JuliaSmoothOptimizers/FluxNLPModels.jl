@@ -46,8 +46,10 @@ Compute the accuracy of the network `nlp.chain` on the entire test dataset.
 Sets the vaiables and rebuild the chain
 """
 function set_vars!(nlp::AbstractFluxNLPModel{T, S}, new_w::AbstractVector{T}) where {T <: Number, S} #TODO test T 
-  nlp.w = deepcopy(new_w)
-  nlp.chain = nlp.rebuild(nlp.w)
+    # nlp.w = deepcopy(new_w)#Todo
+    nlp.w .= new_w #Todo
+
+    nlp.chain = nlp.rebuild(nlp.w)
 end
 
 
