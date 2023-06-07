@@ -71,7 +71,7 @@ end
 
 @kwdef mutable struct Args
   η::Float32 = 3e-3       # learning rate
-  batchsize::Int = 2    # batch size
+  batchsize::Int = 128    # batch size
   epochs::Int = 10        # number of epochs
   use_cuda::Bool = true   # use gpu (if cuda available)
   verbose_freq = 10                               # logging for every verbose_freq iterations

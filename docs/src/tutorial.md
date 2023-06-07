@@ -1,126 +1,204 @@
-<!-- # KnetNLPModels.jl Tutorial
+# FluxNLPModels.jl Tutorial
+## Setting up 
+<!-- ## Preliminaries -->
+This step-by-step example assumes prior knowledge of [Julia](https://julialang.org/) and [Flux.jl](https://github.com/FluxML/Flux.jl).
+See the [Julia tutorial](https://julialang.org/learning/) and the [Flux.jl tutorial](https://fluxml.ai/Flux.jl/stable/models/quickstart/#man-quickstart) for more details.
 
-## Preliminaries
-This step-by-step example assume prior knowledge of [julia](https://julialang.org/) and [Knet.jl](https://github.com/denizyuret/Knet.jl.git).
-See the [Julia tutorial](https://julialang.org/learning/) and the [Knet.jl tutorial](https://github.com/denizyuret/Knet.jl/tree/master/tutorial) for more details.
+For more Examples, please refere to our sample folder at [samples](#TODO)
+<!-- mlp_MNIST_examples.jl -->
+We have aligned this tutorial to [MLP_MNIST](https://github.com/FluxML/model-zoo/blob/master/vision/mlp_mnist/mlp_mnist.jl) example and reused some of their functions.
 
-### Define the layers of interest
-The following code defines a dense layer as a callable julia structure for use on a CPU, via `Matrix` and `Vector` or on a GPU via [CUDA.jl](https://github.com/JuliaGPU/CUDA.jl) and `CuArray`:
-```@example KnetNLPModel
-using Knet, CUDA
+### What we cover in this tutorial
 
-mutable struct Dense{T, Y}
-  w :: Param{T}
-  b :: Param{Y}
-  f # activation function
-end
-(d :: Dense)(x) = d.f.(d.w * mat(x) .+ d.b) # evaluate the layer for a given input x
+We will cover the following:
 
-# define a dense layer with input size i and output size o
-Dense(i :: Int, o :: Int, f=sigm) = Dense(param(o, i), param0(o), f)
-```
-More layer types can be defined.
-Once again, see the [Knet.jl tutorial](https://github.com/denizyuret/Knet.jl/tree/master/tutorial) for more details.
+- Define a Neural Network (NN) Model in Flux, 
+  - Fully connected model
+- Define or set the loss function
+- Data loading
+  - MNIST 
+  - Divide the data into train and test
+- Define a method for calculating accuracy and loss
+- Transfer the NN model to FluxNLPModel 
+- Using FluxNLPModels and access 
+  - Gradient of current weight
+  - Objective (or loss) evaluated at current weights 
+<!-- - TODO: Train with SGD and R2 using FluxNLPModels -->
 
-### Definition of the chained structure that evaluates the network and the loss function (negative log likelihood)
-```@example KnetNLPModel
-using KnetNLPModels
-
-struct ChainNLL <: Chain # must derive from KnetNLPModels.Chain
-  layers
-  ChainNLL(layers...) = new(layers)
-end
-(c :: ChainNLL)(x) = (for l in c.layers; x = l(x); end; x) # evaluate the network for a given input x
-(c :: ChainNLL)(x, y) = Knet.nll(c(x), y) # compute the loss function given input x and expected output y
-(c :: ChainNLL)(data :: Tuple{T1,T2}) where {T1,T2} = c(first(data,2)...) # evaluate loss given data inputs (x,y)
-(c :: ChainNLL)(d :: Knet.Data) = Knet.nll(c; data=d, average=true) # evaluate loss using a minibatch iterator d
-```
-The chained structure that defines the neural network must be a subtype of `KnetNLPModels.Chain`.
-
-### Load datasets and define minibatch
-In this example, we use the [MNIST](https://juliaml.github.io/MLDatasets.jl/stable/datasets/MNIST/) dataset from [MLDatasets.jl](https://github.com/JuliaML/MLDatasets.jl.git).
-```@example KnetNLPModel
+### Packages needed
+```@example FluxNLPModel
+using FluxNLPModels
+using CUDA, Flux, NLPModels #CUDA is used for GPU
+using Flux.Data: DataLoader
+using Flux: onehotbatch, onecold, @epochs
+using Flux.Losses: logitcrossentropy
+using Base: @kwdef
 using MLDatasets
-
-# download datasets without user intervention
-ENV["DATADEPS_ALWAYS_ACCEPT"] = true 
-
-xtrn, ytrn = MNIST.traindata(Float32) # MNIST training dataset
-ytrn[ytrn.==0] .= 10 # re-arrange indices
-xtst, ytst = MNIST.testdata(Float32) # MNIST test dataset
-ytst[ytst.==0] .= 10 # re-arrange indices
-
-dtrn = minibatch(xtrn, ytrn, 100; xsize=(size(xtrn, 1), size(xtrn, 2), 1, :)) # training minibatch
-dtst = minibatch(xtst, ytst, 100; xsize=(size(xtst, 1), size(xtst, 2), 1, :)) # test minibatch
+using JSOSolvers
 ```
 
-## Definition of the neural network and KnetNLPModel
-The following code defines `DenseNet`, a neural network composed of 3 dense layers, embedded in a `ChainNLL`.
-```@example KnetNLPModel
-DenseNet = ChainNLL(Dense(784, 200), Dense(200, 50), Dense(50, 10))
-```
-Next, we define the `KnetNLPModel` from the neural network.
-By default, the size of each minibatch is 1% of the corresponding dataset offered by MNIST.
-```@example KnetNLPModel
-DenseNetNLPModel = KnetNLPModel(DenseNet; size_minibatch=100, data_train=(xtrn, ytrn), data_test=(xtst, ytst))
+### Parameters 
+Here are some of the parameters that we use, The learning rate is only used for SGD method. 
+
+   ```@example FluxNLPModel
+      @kwdef mutable struct Args
+        η::Float32 = 3e-3       # learning rate
+        batchsize::Int = 128    # batch size
+        epochs::Int = 10        # number of epochs
+        use_cuda::Bool = true   # use gpu (if cuda and gpu available)
+        verbose_freq = 10       # logging for every verbose_freq iterations
+      end
+
+      args = Args() # collect options in a struct for convenience
+
+  ``` 
+
+
+### Setting Neural Network (NN) Model
+
+First, a NN model needs to be define in Flux.jl.
+Our model is very simple: It consists of one "hidden layer" with 32 "neurons", each connected to every input pixel. Each neuron has a sigmoid nonlinearity and is connected to every "neuron" in the output layer. Finally, softmax produces probabilities, i.e., positive numbers that add up to 1.
+
+<!-- We have 2 ways of defining the models, one directly or create a method to return a model. -->
+
+We have two ways of defining the models:
+
+1. **Direct Definition**: You can directly define the model in your code, specifying the layers and their connections using Flux's syntax. This approach allows for more flexibility and customization.
+   ```@example FluxNLPModel
+    model = Chain(Dense(28^2=> 32, relu), Dense(32=>10)) #, softmax)
+   ```
+
+2. **Method-Based Definition**: Alternatively, you can create a method that returns the model. This method can encapsulate the specific architecture and parameters of the model, making it easier to reuse and manage. It provides a convenient way to define and initialize the model when needed.
+   ```@example FluxNLPModel
+    function build_model(; imgsize = (28, 28, 1), nclasses = 10)
+      return Chain(Dense(prod(imgsize), 32, relu), Dense(32, nclasses)) 
+    end
+   ```
+
+
+
+Both approaches have their advantages, and you can choose the one that suits your needs and coding style.
+
+### Loss function
+
+We can define any loss function that we need, here we use Flux build-in logitcrossentropy function. 
+```@example FluxNLPModel
+## Loss function
+const loss = Flux.logitcrossentropy
 ```
 
-`DenseNetNLPModel` will be either a `KnetNLPModelCPU` if the code runs on a CPU or a `KnetNLPModelGPU` if it runs on a GPU.
-All the methods are defined for both `KnetNLPModelCPU` and `KnetNLPModelGPU`.
+We also definethe loss function `loss_and_accuracy`. It expects the following arguments:
+* ADataLoader object.
+* The `build_model` function we defined above.
+* A device object (in case we have a GPU available).
+```@example FluxNLPModel
+  function loss_and_accuracy(data_loader, model, device)
+    acc = 0
+    ls = 0.0f0
+    num = 0
+    for (x, y) in data_loader
+      x, y = device(x), device(y)
+      ŷ = model(x)
+      ls += loss(ŷ, y, agg = sum)
+      acc += sum(onecold(ŷ) .== onecold(y)) ## Decode the output of the model
+      num += size(x)[end]
+    end
+    return ls / num, acc / num
+  end 
+```
 
-## Tools associated with a KnetNLPModel
+
+### Load datasets and define minibatch 
+In this section, we will cover the process of loading datasets and defining minibatches for training your model using Flux. Loading and preprocessing data is an essential step in machine learning, as it allows you to train your model on real-world examples.
+
+We will specifically focus on loading the MNIST dataset. We will divide the data into training and testing sets, ensuring that we have separate data for model training and evaluation.
+
+Additionally, we will define minibatches, which are subsets of the dataset that are used during the training process. Minibatches enable efficient training by processing a small batch of examples at a time, instead of the entire dataset. This technique helps in managing memory resources and improving convergence speed.
+
+
+
+```@example FluxNLPModel
+function getdata(args)
+  ENV["DATADEPS_ALWAYS_ACCEPT"] = "true"
+
+  # Loading Dataset	
+  xtrain, ytrain = MLDatasets.MNIST(Tx = Float32, split = :train)[:]
+  xtest, ytest = MLDatasets.MNIST(Tx = Float32, split = :test)[:]
+
+  # Reshape Data in order to flatten each image into a linear array
+  xtrain = Flux.flatten(xtrain)
+  xtest = Flux.flatten(xtest)
+
+  # One-hot-encode the labels
+  ytrain, ytest = onehotbatch(ytrain, 0:9), onehotbatch(ytest, 0:9)
+
+  # Create DataLoaders (mini-batch iterators)
+  train_loader = DataLoader((xtrain, ytrain), batchsize = args.batchsize, shuffle = true)
+  test_loader = DataLoader((xtest, ytest), batchsize = args.batchsize)
+
+  return train_loader, test_loader
+end
+```
+
+
+### Transfering to FluxNLPModels
+
+```@example FluxNLPModel
+  device = cpu
+  train_loader, test_loader = getdata(args)
+
+  @info "Constructing model"
+  ## Construct model
+  model = build_model() |> device
+
+  # now we set the model to FluxNLPModel
+  nlp = FluxNLPModel(model, train_loader, test_loader; loss_f = loss)
+```
+
+
+
+
+## Tools associated with a FluxNLPModel
 The problem dimension `n`, where `w` ∈ ℝⁿ:
-```@example KnetNLPModel
-n = DenseNetNLPModel.meta.nvar
+```@example FluxNLPModel
+n = nlp.meta.nvar
 ```
 
 ### Get the current network weights:
-```@example KnetNLPModel
-w = vector_params(DenseNetNLPModel)
+```@example FluxNLPModel
+w = nlp.w
 ```
 
 ### Evaluate the loss function (i.e. the objective function) at `w`:
-```@example KnetNLPModel
+```@example FluxNLPModel
 using NLPModels
-NLPModels.obj(DenseNetNLPModel, w)
+NLPModels.obj(nlp, w)
 ```
-The length of `w` must be `DenseNetNLPModel.meta.nvar`.
+The length of `w` must be `nlp.meta.nvar`.
 
 ### Evaluate the gradient at `w`:
-```@example KnetNLPModel
+```@example FluxNLPModel
 g = similar(w)
-NLPModels.grad!(DenseNetNLPModel, w, g)
+NLPModels.grad!(nlp, w, g)
 ```
-The result is stored in `g :: Vector{T}`, `g` is similar to `v` (of size `DenseNetNLPModel.meta.nvar`).
 
-### Evaluate the network accuracy:
-The accuracy of the network can be evaluated with:
-```@example KnetNLPModel
-KnetNLPModels.accuracy(DenseNetNLPModel)
-```
-`accuracy()` uses the full training dataset.
-That way, the accuracy will not fluctuate with the minibatch.
 
-## Default behavior
+
+## Chaning minibatch 
 By default, the training minibatch that evaluates the neural network doesn't change between evaluations.
-To change the training minibatch, use one of the following methods:
-* To select a minibatch randomly
-```@example KnetNLPModel
-rand_minibatch_train!(DenseNetNLPModel)
-```
-* To select the next minibatch from the current minibatch iterator (can be used in a loop to go over the whole dataset)
-```@example KnetNLPModel
-minibatch_next_train!(DenseNetNLPModel)
-```
-* Reset to the first minibatch
-```@example KnetNLPModel
-reset_minibatch_train!(DenseNetNLPModel)
-```
+To change the training minibatch, as we do it in this very simple example of SGD:
 
-The size of the new minibatch is the size defined earlier.
-
-The size of the training and test minibatch can be set to `1/p` the size of the dataset with:
-```@example KnetNLPModel
-p = 120
-set_size_minibatch!(DenseNetNLPModel, p) # p::Int > 1
-``` -->
+```@example FluxNLPModel
+# now we set the model to FluxNLPModel
+  g = similar(nlp.w) #TODO should they be here?
+  w_k = copy(nlp.w)
+  for epoch = 1:(args.epochs)
+    for (x, y) in train_loader
+      x, y = device(x), device(y) ## transfer data to device
+      nlp.current_training_minibatch = (x, y) # Change the minibatch
+      g = NLPModels.grad(nlp, w_k)
+      w_k -= args.η .* g      #   update the parameter
+      FluxNLPModels.set_vars!(nlp, w_k) 
+    end
+  end
+```
