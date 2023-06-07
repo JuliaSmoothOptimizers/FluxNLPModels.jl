@@ -51,6 +51,9 @@ function build_model(; imgsize = (28, 28, 1), nclasses = 10,T=Float32) #TODO the
         )
 end
 
+
+#TODO Build models the way they are then change the myT 
+
 # function build_model(; imgsize = (28, 28, 1), nclasses = 10,T=Float32) #TODO the rand fails for Float32sr make a new matrix then replace it 
 #   return Chain( #TODO important: when using Dense(matrix of random, dimention is transposed)
 #       Dense(T.(zeros(Float32,32,prod(imgsize))),true, relu), # I use this way to avoid rand error
