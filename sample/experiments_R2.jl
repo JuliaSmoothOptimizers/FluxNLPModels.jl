@@ -44,22 +44,24 @@ function getdata(args;T=Float32) #T for types
   return train_loader, test_loader
 end
 
-function build_model(; imgsize = (28, 28, 1), nclasses = 10,T=Float32) #TODO the rand fails for Float32sr make a new matrix then replace it 
-    return Chain( #TODO important: when using Dense(matrix of random, dimention is transposed)
-        Dense(T.(rand(Float32,32,prod(imgsize))),true, relu), # I use this way to avoid rand error
-        Dense(T.(rand(Float32, nclasses,32)),true) # The following is not correct : Dense(rand(T,32, nclasses),true) 
-        )
+# function build_model(; imgsize = (28, 28, 1), nclasses = 10,T=Float32) #TODO the rand fails for Float32sr make a new matrix then replace it 
+#     return Chain( #TODO important: when using Dense(matrix of random, dimention is transposed)
+#         Dense(T.(rand(Float32,32,prod(imgsize))),true, relu), # I use this way to avoid rand error
+#         Dense(T.(rand(Float32, nclasses,32)),true) # The following is not correct : Dense(rand(T,32, nclasses),true) 
+#         )
+# end
+
+f64(m) = Flux.paramtype(Float64, m) # similar to https://github.com/FluxML/Flux.jl/blob/d21460060e055dca1837c488005f6b1a8e87fa1b/src/functor.jl#L217
+
+function build_model(; imgsize = (28, 28, 1), nclasses = 10,T=Float32)
+  m =  Chain(Dense(prod(imgsize), 32, relu), Dense(32, nclasses))
+  if T == Float64
+    m = f64(m)
+  end
+  return m
 end
 
-
-#TODO Build models the way they are then change the myT 
-
-# function build_model(; imgsize = (28, 28, 1), nclasses = 10,T=Float32) #TODO the rand fails for Float32sr make a new matrix then replace it 
-#   return Chain( #TODO important: when using Dense(matrix of random, dimention is transposed)
-#       Dense(T.(zeros(Float32,32,prod(imgsize))),true, relu), # I use this way to avoid rand error
-#       Dense(T.(zeros(Float32, nclasses,32)),true) # The following is not correct : Dense(rand(T,32, nclasses),true) 
-#       )
-# end
+# m16 = f16(m64)
 
 
 # Note that we use the functions [Dense](https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.Dense) so that our model is *densely* (or fully) connected and [Chain](https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.Chain) to chain the computation of the three layers.
@@ -88,7 +90,7 @@ end
 
 @kwdef mutable struct Args
   η::Float32 = 3e-3       # learning rate #TODO fixe this
-  batchsize::Int = 128    # batch size
+  batchsize::Int = 1000    # batch size
   epochs::Int = 10        # number of epochs
   use_cuda::Bool = true   # use gpu (if cuda available)
   verbose_freq = 10                               # logging for every verbose_freq iterations
@@ -172,8 +174,8 @@ function cb(
   iter = train_loader
   if data.i == 0
     next = iterate(iter)
-  elseif data.i %  5 !=0
-    return 
+  # elseif data.i %  3 !=0
+  #   return 
   else
     next = iterate(iter, data.state)
   end
@@ -209,13 +211,13 @@ function train_FluxNlPModel_R2(;
 
   #R2 parameter
   # verbose = -1,
-  atol = myT(0.001) #eps(myT)
+  atol = myT(0.0001) #eps(myT)
   rtol = myT(0.001) #eps(myT)
-  η1 = myT(1e-4)
-  η2 = myT(0.9)
+  η1 = myT(0.01)#eps(myT)^(1 / 4)
+  η2 = myT(0.99)
   γ1 = myT(1 / 2)
   γ2 = 1 / γ1
-  σmin = zero(myT)#rand(myT)#zero(myT)# change this
+  σmin = rand(myT)#zero(myT)# change this
   # β = myT(0.9)
   β = myT(0)
   max_time = Inf
