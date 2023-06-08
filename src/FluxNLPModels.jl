@@ -63,13 +63,6 @@ function FluxNLPModel(
     error("train data or test is empty")
   end
 
-  #TODO we should decide if we want the minibatch to be created here to pass down, I prefere pass down
-  # xtrn = data_train[1]
-  # ytrn = data_train[2]
-
-  # xtst = data_test[1]
-  # ytst = data_test[2]
-
   #pass by user 
   training_minibatch_iterator = data_train
   test_minibatch_iterator = data_test

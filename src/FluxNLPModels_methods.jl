@@ -37,7 +37,6 @@ function NLPModels.grad!(
   @lencheck nlp.meta.nvar w g
   increment!(nlp, :neval_grad)
   x, y = nlp.current_training_minibatch
- 
   g .= gradient(w_g->local_loss(nlp, x,y, w_g) , w)[1]
   return g
 end
@@ -69,12 +68,10 @@ function NLPModels.objgrad!(
   #both updates
   increment!(nlp, :neval_obj)
   increment!(nlp, :neval_grad)
-
   set_vars!(nlp, w)
 
   x, y = nlp.current_training_minibatch
   f_w = nlp.loss_f(nlp.chain(x), y)
-
   g .= gradient(w_g->local_loss(nlp,x,y, w_g) , w)[1]
 
   return f_w, g

@@ -201,4 +201,4 @@ To change the training minibatch, as we do it in this very simple example of SGD
       FluxNLPModels.set_vars!(nlp, w_k) 
     end
   end
-```
+``` 
