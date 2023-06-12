@@ -1,5 +1,4 @@
 
-
 using FluxNLPModels
 using CUDA, Flux, NLPModels
 
@@ -22,9 +21,8 @@ using Dates
 using StochasticRounding
 using LinearAlgebra
 
-
 myT = Float64
-function getdata(args;T=Float32) #T for types
+function getdata(args; T = Float32) #T for types
   ENV["DATADEPS_ALWAYS_ACCEPT"] = "true"
 
   # Loading Dataset	
@@ -45,13 +43,12 @@ function getdata(args;T=Float32) #T for types
   return train_loader, test_loader
 end
 
-function build_model(; imgsize = (28, 28, 1), nclasses = 10,T=Float32) #TODO the rand fails for Float32sr make a new matrix then replace it 
+function build_model(; imgsize = (28, 28, 1), nclasses = 10, T = Float32) #TODO the rand fails for Float32sr make a new matrix then replace it 
   return Chain( #TODO important: when using Dense(matrix of random, dimention is transposed)
-      Dense(T.(zeros(Float32,32,prod(imgsize))),true, relu), # I use this way to avoid rand error
-      Dense(T.(zeros(Float32, nclasses,32)),true) # The following is not correct : Dense(rand(T,32, nclasses),true) 
-      )
+    Dense(T.(zeros(Float32, 32, prod(imgsize))), true, relu), # I use this way to avoid rand error
+    Dense(T.(zeros(Float32, nclasses, 32)), true), # The following is not correct : Dense(rand(T,32, nclasses),true) 
+  )
 end
-
 
 # Note that we use the functions [Dense](https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.Dense) so that our model is *densely* (or fully) connected and [Chain](https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.Chain) to chain the computation of the three layers.
 
@@ -59,7 +56,7 @@ end
 const loss = logitcrossentropy
 const loss2 = Flux.mse
 
-function loss_and_accuracy(data_loader, model, device,T)
+function loss_and_accuracy(data_loader, model, device, T)
   acc = T(0)
   ls = T(0.0f0)
   num = T(0)
@@ -69,7 +66,7 @@ function loss_and_accuracy(data_loader, model, device,T)
     ŷ = model(x)
     # println(typeof(ŷ))
 
-    ls += loss(ŷ, y, agg = sum)    
+    ls += loss(ŷ, y, agg = sum)
     # println(typeof(ls))
 
     acc += sum(onecold(ŷ) .== onecold(y)) ## Decode the output of the model
@@ -92,49 +89,40 @@ end
   save_path = "runs/output"                            # results path
 end
 
-
-
 args = Args() ## Collect options in a struct for convenience
 device = cpu
 
-
-
-
 ## Create test and train dataloaders
-train_loader, test_loader = getdata(args,T=myT)
+train_loader, test_loader = getdata(args, T = myT)
 
 @info "Constructing model and starting training"
 ## Construct model
-model = build_model(T= myT) |> device
+model = build_model(T = myT) |> device
 @info "The type of model  is " typeof(model)
 
 # now we set the model to FluxNLPModel
 nlp = FluxNLPModel(model, train_loader, test_loader; loss_f = loss) #TODO add the device here for the data mini-batch
 @info "The type of nlp.w  is " typeof(nlp.w)
 
-
 x = copy(nlp.meta.x0)
-∇fk= similar(nlp.meta.x0)
-c= 0
+∇fk = similar(nlp.meta.x0)
+c = 0
 
-while c<10
+while c < 10
   # ∇fk= NLPModels.grad(nlp, x)       
-    gk= NLPModels.grad(nlp, x)   
-    # ∇fk= similar(nlp.meta.x0)
-    
-    grad!(nlp, x, ∇fk)
+  gk = NLPModels.grad(nlp, x)
+  # ∇fk= similar(nlp.meta.x0)
 
-    
-    x .= x .- (∇fk)
+  grad!(nlp, x, ∇fk)
 
-    norm_∇fk = norm(∇fk)
-    norm_gk= norm(gk)
+  x .= x .- (∇fk)
 
-    c= c+1;
-    println(norm_∇fk,"-------------", norm_gk)
+  norm_∇fk = norm(∇fk)
+  norm_gk = norm(gk)
+
+  c = c + 1
+  println(norm_∇fk, "-------------", norm_gk)
 end
-
-
 
 # #######################################################
 # w1, re = Flux.destructure(model)
@@ -144,10 +132,9 @@ end
 #   # increment!(nlp, :neval_obj) #TODO not sure 
 #   # set_vars!(nlp, w)
 #   chain = rebuld(w)
- 
+
 #   return loss(chain(x), y)
 # end
-
 
 # c= 0
 
@@ -158,11 +145,6 @@ end
 #   w1 .= w1 .- g[1];
 #   c=c+1
 # end
-
-
-
-
-
 
 #        """
 #     f, g = objgrad!(nlp, x, g)
@@ -176,8 +158,6 @@ end
 #   grad!(nlp, x, g)
 #   return f, g
 # end
-
-
 
 # julia> function pow(x, n)
 #          r = 1
@@ -196,21 +176,18 @@ end
 
 # julia> gradient(x -> pow2(x, 3), 5)
 
+# set_vars!(nlp, w)
+# x, y = nlp.current_training_minibatch
+# param = Flux.params(nlp.chain)
+# gs = gradient(() -> nlp.loss_f(nlp.chain(x), y), param) # compute gradient  
 
+# i = 1
+# j= 1
+# for p in param
+#   buff, re = Flux.destructure(gs[p])
+#   j = i + size(buff)[1]
+#   g[i:j-1 ] = buff
+#   i = j+1
 
-
-  # set_vars!(nlp, w)
-  # x, y = nlp.current_training_minibatch
-  # param = Flux.params(nlp.chain)
-  # gs = gradient(() -> nlp.loss_f(nlp.chain(x), y), param) # compute gradient  
-
-  # i = 1
-  # j= 1
-  # for p in param
-  #   buff, re = Flux.destructure(gs[p])
-  #   j = i + size(buff)[1]
-  #   g[i:j-1 ] = buff
-  #   i = j+1
-    
-  # end
-  # return g
+# end
+# return g

@@ -33,8 +33,8 @@ mutable struct FluxNLPModel{T, S, C <: Chain, F <: Function} <: AbstractFluxNLPM
   counters::Counters
   loss_f::F
   size_minibatch::Int #TODO remove this 
-  training_minibatch_iterator
-  test_minibatch_iterator
+  training_minibatch_iterator #TODO remove this, right now we pass the data
+  test_minibatch_iterator #TODO remove this 
   current_training_minibatch
   current_test_minibatch
   rebuild # this is used to create the rebuild of flat function 
@@ -53,6 +53,8 @@ function FluxNLPModel(
   chain_ANN::T,
   data_train,
   data_test;
+  current_training_minibatch = first(data_train) #TODO add document that user has to pass in the current minibatch
+  current_test_minibatch = first(data_test) #TODO create set and getter
   size_minibatch::Int = 100,
   loss_f::F = Flux.mse, #Flux.crossentropy,
 ) where {T <: Chain, F <: Function}
@@ -63,19 +65,15 @@ function FluxNLPModel(
     error("train data or test is empty")
   end
 
-  #pass by user 
-  training_minibatch_iterator = data_train
-  test_minibatch_iterator = data_test
-  current_training_minibatch = first(training_minibatch_iterator) #TODO add document that user has to pass in the current minibatch
-  current_test_minibatch = first(test_minibatch_iterator) #TODO create set and getter
+  
   return FluxNLPModel(
     meta,
     chain_ANN,
     Counters(),
     loss_f,
     size_minibatch,
-    training_minibatch_iterator,
-    test_minibatch_iterator,
+    data_train,
+    data_test,
     current_training_minibatch,
     current_test_minibatch,
     rebuild,

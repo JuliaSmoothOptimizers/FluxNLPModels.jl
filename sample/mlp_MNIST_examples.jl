@@ -219,7 +219,7 @@ function cb(
   train_loader,
   test_loader,
   device,
-#   param::AbstractParameterSet,
+  #   param::AbstractParameterSet,
   data::StochasticR2Data,
 )
 
@@ -335,7 +335,10 @@ end
 # end
 
 if args.tblogger
-  tblogger = TBLogger(args.save_path * "train_FluxNlPModel_R2-"* Dates.format(now(),"yyyy-mm-dd-H-M-S"), tb_overwrite) #TODO changing tblogger for each project 
+  tblogger = TBLogger(
+    args.save_path * "train_FluxNlPModel_R2-" * Dates.format(now(), "yyyy-mm-dd-H-M-S"),
+    tb_overwrite,
+  ) #TODO changing tblogger for each project 
 end
 
 train_FluxNlPModel_R2()

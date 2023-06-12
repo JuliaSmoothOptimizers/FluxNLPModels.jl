@@ -19,11 +19,9 @@ using JSOSolvers
 using Dates
 using StochasticRounding
 
-
-
 # Genral functions 
 
-function getdata(args;T=Float32) #T for types
+function getdata(args; T = Float32) #T for types
   ENV["DATADEPS_ALWAYS_ACCEPT"] = "true"
 
   # Loading Dataset	
@@ -53,8 +51,8 @@ end
 
 f64(m) = Flux.paramtype(Float64, m) # similar to https://github.com/FluxML/Flux.jl/blob/d21460060e055dca1837c488005f6b1a8e87fa1b/src/functor.jl#L217
 
-function build_model(; imgsize = (28, 28, 1), nclasses = 10,T=Float32)
-  m =  Chain(Dense(prod(imgsize), 32, relu), Dense(32, nclasses))
+function build_model(; imgsize = (28, 28, 1), nclasses = 10, T = Float32)
+  m = Chain(Dense(prod(imgsize), 32, relu), Dense(32, nclasses))
   if T == Float64
     m = f64(m)
   end
@@ -62,7 +60,6 @@ function build_model(; imgsize = (28, 28, 1), nclasses = 10,T=Float32)
 end
 
 # m16 = f16(m64)
-
 
 # Note that we use the functions [Dense](https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.Dense) so that our model is *densely* (or fully) connected and [Chain](https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.Chain) to chain the computation of the three layers.
 
@@ -74,14 +71,14 @@ const loss2 = Flux.mse
 # * The `build_model` function we defined above.
 # * A device object (in case we have a GPU available).
 
-function loss_and_accuracy(data_loader, model, device,T)
+function loss_and_accuracy(data_loader, model, device, T)
   acc = T(0)
   ls = T(0.0f0)
   num = T(0)
   for (x, y) in data_loader
     x, y = device(x), device(y)
     ŷ = model(x)
-    ls += loss(ŷ, y, agg = sum)    
+    ls += loss(ŷ, y, agg = sum)
     acc += sum(onecold(ŷ) .== onecold(y)) ## Decode the output of the model
     num += size(x)[end]
   end
@@ -98,29 +95,28 @@ end
   save_path = "runs/output"                            # results path
 end
 
-
 #function to get dictionary of model parameters
 function fill_param_dict!(dict, m, prefix)
-    if m isa Chain
-        for (i, layer) in enumerate(m.layers)
-            fill_param_dict!(dict, layer, prefix*"layer_"*string(i)*"/"*string(layer)*"/")
-        end
-    else
-        for fieldname in fieldnames(typeof(m))
-            val = getfield(m, fieldname)
-            if val isa AbstractArray
-                val = vec(val)
-            end
-            dict[prefix*string(fieldname)] = val
-        end
+  if m isa Chain
+    for (i, layer) in enumerate(m.layers)
+      fill_param_dict!(dict, layer, prefix * "layer_" * string(i) * "/" * string(layer) * "/")
     end
+  else
+    for fieldname in fieldnames(typeof(m))
+      val = getfield(m, fieldname)
+      if val isa AbstractArray
+        val = vec(val)
+      end
+      dict[prefix * string(fieldname)] = val
+    end
+  end
 end
 
-function TBCallback(train_loader, test_loader, model, epoch, device;T=Float32)
+function TBCallback(train_loader, test_loader, model, epoch, device; T = Float32)
 
   ## Report on train and test
-  train_loss, train_acc = loss_and_accuracy(train_loader, model, device,T)
-  test_loss, test_acc = loss_and_accuracy(test_loader, model, device,T)
+  train_loss, train_acc = loss_and_accuracy(train_loader, model, device, T)
+  test_loss, test_acc = loss_and_accuracy(test_loader, model, device, T)
   # println("Epoch=$epoch")
   # println("  train_loss = $train_loss, train_accuracy = $train_acc")
   # println("  test_loss = $test_loss, test_accuracy = $test_acc")
@@ -130,7 +126,7 @@ function TBCallback(train_loader, test_loader, model, epoch, device;T=Float32)
 
   if args.tblogger #&& train_steps % args.verbose_freq == 0
     with_logger(tblogger) do
-      @info "model" params=param_dict log_step_increment=0
+      @info "model" params = param_dict log_step_increment = 0
       @info "epoch" epoch = epoch
       @info "train" loss = train_loss acc = train_acc
       @info "test" loss = test_loss acc = test_acc
@@ -138,7 +134,6 @@ function TBCallback(train_loader, test_loader, model, epoch, device;T=Float32)
   end
 end
 args = Args() # collect options in a struct for convenience
-
 
 #########################################################################
 ## R2 FluxNLPModels
@@ -161,11 +156,11 @@ function cb(
   test_loader,
   device,
   data::StochasticR2Data;
-  myT=Float32
+  myT = Float32,
 )
 
   # logging
-  TBCallback(train_loader, test_loader, nlp.chain, data.epoch, device;T=myT) #not sure to pass nlp.chain or fx
+  TBCallback(train_loader, test_loader, nlp.chain, data.epoch, device; T = myT) #not sure to pass nlp.chain or fx
   # Max epoch
   if data.epoch == data.max_epoch
     stats.status = :user
@@ -174,8 +169,8 @@ function cb(
   iter = train_loader
   if data.i == 0
     next = iterate(iter)
-  # elseif data.i %  3 !=0
-  #   return 
+    # elseif data.i %  3 !=0
+    #   return 
   else
     next = iterate(iter, data.state)
   end
@@ -195,7 +190,7 @@ function cb(
 end
 
 function train_FluxNlPModel_R2(;
-  myT=Float32, #used to define the type
+  myT = Float32, #used to define the type
   kws...,
 )
   args = Args(; kws...) ## Collect options in a struct for convenience
@@ -225,11 +220,11 @@ function train_FluxNlPModel_R2(;
   !ispath(args.save_path) && mkpath(args.save_path)
 
   ## Create test and train dataloaders
-  train_loader, test_loader = getdata(args,T=myT)
+  train_loader, test_loader = getdata(args, T = myT)
 
   @info "Constructing model and starting training"
   ## Construct model
-  model = build_model(T= myT) |> device
+  model = build_model(T = myT) |> device
   @info "The type of model  is " typeof(model)
 
   # now we set the model to FluxNLPModel
@@ -237,7 +232,7 @@ function train_FluxNlPModel_R2(;
   @info "The type of nlp.w  is " typeof(nlp.w)
 
   # #set the fist data sets
-  item  = first(train_loader)
+  item = first(train_loader)
   nlp.current_training_minibatch = device(item) # move to cpu or gpu
   stochastic_data = StochasticR2Data(0, 0, args.epochs, atol, nothing) # data.i =0
   solver_stats = JSOSolvers.R2(
@@ -252,15 +247,12 @@ function train_FluxNlPModel_R2(;
     β = β,
     max_time = max_time,
     verbose = 1,
-    max_iter= 3000,
-    callback = (nlp, solver, stats) -> cb(nlp, solver, stats, train_loader, test_loader, device, stochastic_data; myT=myT),
+    max_iter = 3000,
+    callback = (nlp, solver, stats) ->
+      cb(nlp, solver, stats, train_loader, test_loader, device, stochastic_data; myT = myT),
   )
   # return stochastic_data
 end
-
-
-
-
 
 # ----------------------------------#
 #       R2
@@ -268,15 +260,18 @@ end
 
 # for myT in [Float16,Float32,Float64,Float32sr] #SR fails ERROR: ArgumentError: Sampler for this object is not defined
 for myT in [Float64]
-    if args.tblogger #TODO add timer to this 
-      global   tblogger = TBLogger(
-            args.save_path * "/FluxNLPModel_R2/_"*string(myT)*"_" * Dates.format(now(), "yyyy-mm-dd-H-M-S"),
-            tb_overwrite,
-        ) #TODO changing tblogger for each project 
-    end
-    train_FluxNlPModel_R2(;myT=myT) #TODO this is slow
-    if args.tblogger
+  if args.tblogger #TODO add timer to this 
+    global tblogger = TBLogger(
+      args.save_path *
+      "/FluxNLPModel_R2/_" *
+      string(myT) *
+      "_" *
+      Dates.format(now(), "yyyy-mm-dd-H-M-S"),
+      tb_overwrite,
+    ) #TODO changing tblogger for each project 
+  end
+  train_FluxNlPModel_R2(; myT = myT) #TODO this is slow
+  if args.tblogger
     close(tblogger)
-    end
+  end
 end
-
