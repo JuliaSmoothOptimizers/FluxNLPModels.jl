@@ -201,6 +201,70 @@ function cb(
 end
 
 
+#TODO  IDEA for batch size updating
+
+# Pseudo code:
+# data = load_full_data()
+# batch_size = 10
+# while true
+#     minibatch = data[rand(1:end, batch_size)]
+#     loss, grad = withgradient(evaluate_model, minibatch)
+#     if should_stop(loss) 
+#         break
+#     end
+#     optimize_step!(model, gradient, learning_rate)
+#     batch_size= min(1000, batchsize +2)
+
+# end
+
+
+
+
+
+# Frames White
+# :dancer::skin-tone-2:  3 days ago
+#  how would make sure don't revisit same data points?)
+# You don't really have to. Normally ML training trans in each point dozens to thousands of times. So just randomly sampling each training step by the law if large numbers says it's going to average out the same as shuffling every time plus doing every item
+# .but if you want you can always just track the last index of the item you took.
+# Pseudo code:
+# data = load_full_data()
+# batch_size = 10
+# batch_start = 1
+# while true
+#     batch_end = batch_start + batch_size
+#     minibatch = data[batch_start:min(batch_end, end)]
+    
+#     loss, grad = withgradient(evaluate_model, minibatch)
+#     if should_stop(loss) 
+#         break
+#     end
+#     optimize_step!(model, gradient, learning_rate)
+#     batch_size= min(1000, batchsize +2)
+#     batch_start = batch_end > length(data) ? batch_end : 1
+# end
+# :heart:
+# 1
+
+
+
+# Lucas Pereira
+#   3 days ago
+# these are valid suggestions. but what I recommended would look something like dataloaders = [Dataloader(1:numberOfSamples, batchsize = bs) for bs in [64, 128, 256 ..., 1024]]. And then, in each epoch, you use the batches of integers to access the data. You guarantee to visit every sample exactly once every epoch. And, after using the same dataloader for a few epochs, you move on to the next one in the vector dataloaders. In general:
+# batchSizes = [2 ^ f for f in 6:10] # 64, 128, ..., 1024
+# dataLoaders = [Dataloader(1:numberOfSamples |> collect, batchsize = bs) for bs in batchSizes]
+# loaderCounter = 1
+# for epoch in 1:numberOfEpochs
+#   # move on to next dataloader every 10 epochs
+#   epoch % 10 == 0 && loaderCounter += 1
+#   for intBatch in dataLoaders[loaderCounter]
+#     dataBatch = data[intBatch]
+#     # use batch. update model...
+#   end
+# end
+
+
+
+
 # b=4
 # # item_minibatch_x = similar(item[1])
 # # item_minibatch_y = similar(item[2])
