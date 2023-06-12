@@ -59,13 +59,14 @@ function loss_and_accuracy(data_loader, model, device, T) #TODO fix this
   acc = T(0)
   ls = T(0.0f0)
   num = T(0)
-  for (x, y) in data_loader
+  # for (x, y) in data_loader
+  x,y = data_loader
     x, y = device(x), device(y)
     ŷ = model(x)
-    ls += loss(ŷ, y, agg = sum)
-    acc += sum(onecold(ŷ) .== onecold(y)) ## Decode the output of the model
-    num += size(x)[end]
-  end
+    ls = loss(ŷ, y, agg = sum)
+    acc = sum(onecold(ŷ) .== onecold(y)) ## Decode the output of the model
+    num = size(x)[end]
+  # end
   return ls / num, acc / num
 end
 
@@ -162,7 +163,7 @@ function cb(
   else #end of the epoch
     data.batch_start = 1
     data.epoch = data.epoch + 1
-    # logging
+    # logging the epoch
     TBCallback(nlp.train_loader, nlp.test_loader, nlp.chain, data.epoch, device; T = myT) #not sure to pass nlp.chain or fx #TODO fix this 
   end
 end
