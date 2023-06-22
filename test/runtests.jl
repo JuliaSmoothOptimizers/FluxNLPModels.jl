@@ -14,8 +14,7 @@ function getdata(args)
   ENV["DATADEPS_ALWAYS_ACCEPT"] = "true" # download datasets without having to manually confirm the download
 
   # Loading Dataset	
-  # xtrain, ytrain = MLDatasets.MNIST.traindata(Float32)
-  # xtest, ytest = MLDatasets.MNIST.testdata(Float32)
+
   xtrain, ytrain = MLDatasets.MNIST(Tx = Float32, split = :train)[:]
   xtest, ytest = MLDatasets.MNIST(Tx = Float32, split = :test)[:]
 
@@ -30,7 +29,6 @@ function getdata(args)
   train_loader = DataLoader((xtrain, ytrain), batchsize = args.batchsize, shuffle = true)
   test_loader = DataLoader((xtest, ytest), batchsize = args.batchsize)
 
-  # return (xtrain, ytrain) , (xtest, ytest)
   return train_loader, test_loader
 end
 
@@ -46,15 +44,6 @@ end
 end
 
 args = Args() # collect options in a struct for convenience
-
-# if CUDA.functional() && args.use_cuda
-#   @info "testing on CUDA GPU"
-#   CUDA.allowscalar(false)
-#   device = gpu
-# else
-#   @info "testing on CPU"
-#   device = cpu
-# end
 
 device = cpu #TODO should we test on GPU?
 
@@ -87,4 +76,18 @@ device = cpu #TODO should we test on GPU?
   @test x1 == DNNLPModel.w
   @test Flux.params(DNNLPModel.chain)[1][1] == x1[1]
   @test Flux.params(DNNLPModel.chain)[1][2] == x1[2]
+end
+
+@testset "minibatch tests" begin
+  # Create test and train dataloaders
+  train_data, test_data = getdata(args)
+
+  # Construct model
+  DN = build_model() |> device
+  DNNLPModel = FluxNLPModel(DN, train_data, test_data)
+  reset_minibatch_train!(nlp)
+  @test nlp.current_training_minibatch_status === nothing
+  buffer_minibatch = deepcopy(nlp.current_training_minibatch)
+  @test minibatch_next_train!(nlp) # should return true 
+  @test !isequal(nlp.current_training_minibatch, buffer_minibatch)
 end
