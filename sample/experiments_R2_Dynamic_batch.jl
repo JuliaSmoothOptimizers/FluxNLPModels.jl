@@ -31,7 +31,7 @@ function getdata(args; T = Float32) #T for types
   return xtrain, ytrain, xtest, ytest
 end
 
-function creatbatch(xtrain, ytrain, xtest, ytest, args)
+function createbatch(xtrain, ytrain, xtest, ytest, args)
   # Create DataLoaders (mini-batch iterators)
   train_loader = DataLoader((xtrain, ytrain), batchsize = args.batchsize, shuffle = true)
   test_loader = DataLoader((xtest, ytest), batchsize = args.batchsize)
@@ -60,12 +60,12 @@ function loss_and_accuracy(data_loader, model, device, T) #TODO fix this
   ls = T(0.0f0)
   num = T(0)
   # for (x, y) in data_loader
-  x,y = data_loader
-    x, y = device(x), device(y)
-    ŷ = model(x)
-    ls = loss(ŷ, y, agg = sum)
-    acc = sum(onecold(ŷ) .== onecold(y)) ## Decode the output of the model
-    num = size(x)[end]
+  x, y = data_loader
+  x, y = device(x), device(y)
+  ŷ = model(x)
+  ls = loss(ŷ, y, agg = sum)
+  acc = sum(onecold(ŷ) .== onecold(y)) ## Decode the output of the model
+  num = size(x)[end]
   # end
   return ls / num, acc / num
 end
@@ -122,7 +122,6 @@ args = Args() # collect options in a struct for convenience
 
 #########################################################################
 ## R2 FluxNLPModels
-
 
 # used in the callback of R2 for training deep learning model 
 mutable struct StochasticR2Data
@@ -206,7 +205,7 @@ function train_FluxNlPModel_R2(;
   batch_size = args.batchsize
   batch_start = 1
 
-  # train_loader, test_loader = creatbatch(xtrain, ytrain , xtest, ytest) #TODO change this, don't need it 
+  # train_loader, test_loader = createbatch(xtrain, ytrain , xtest, ytest) #TODO change this, don't need it 
   train_loader, test_loader = data_train, data_test
 
   @info "Constructing model and starting training"
@@ -226,7 +225,7 @@ function train_FluxNlPModel_R2(;
     model,
     train_loader,
     test_loader;
-    current_training_minibatch= device(minibatch),
+    current_training_minibatch = device(minibatch),
     current_test_minibatch = device(minibatch_test),
     loss_f = loss,
   ) #TODO add the device here for the data mini-batch
@@ -408,7 +407,6 @@ end
 #     nlp.current_training_minibatch = device(item_minibatch) # move to cpu or gpu
 #   end
 # end
-
 
 # xtrain, ytrain , xtest, ytest = getdata(args,T=myT)
 # data_train = (xtrain, ytrain)

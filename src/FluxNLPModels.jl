@@ -53,9 +53,8 @@ function FluxNLPModel(
   chain_ANN::T,
   data_train,
   data_test;
-  current_training_minibatch = first(data_train) #TODO add document that user has to pass in the current minibatch
-  current_test_minibatch = first(data_test) #TODO create set and getter
-  size_minibatch::Int = 100,
+  current_training_minibatch = first(data_train)current_test_minibatch =
+    first(data_test)size_minibatch::Int = 100,
   loss_f::F = Flux.mse, #Flux.crossentropy,
 ) where {T <: Chain, F <: Function}
   x0, rebuild = Flux.destructure(chain_ANN)
@@ -65,7 +64,6 @@ function FluxNLPModel(
     error("train data or test is empty")
   end
 
-  
   return FluxNLPModel(
     meta,
     chain_ANN,
