@@ -84,7 +84,7 @@ end
 
   # Construct model
   DN = build_model() |> device
-  DNNLPModel = FluxNLPModel(DN, train_data, test_data)
+  nlp = FluxNLPModel(DN, train_data, test_data)
   reset_minibatch_train!(nlp)
   @test nlp.current_training_minibatch_status === nothing
   buffer_minibatch = deepcopy(nlp.current_training_minibatch)

@@ -3,9 +3,9 @@ module FluxNLPModels
 using Flux, NLPModels
 #TODO use Flux:Data vs MLUtils
 export AbstractFluxNLPModel, FluxNLPModel
-export flat_grad!
 export reset_minibatch_train!, reset_minibatch_test!
-export create_minibatch, set_vars!
+export minibatch_next_train!, minibatch_next_test!
+export accuracy, set_vars!, local_loss
 
 abstract type AbstractFluxNLPModel{T, S} <: AbstractNLPModel{T, S} end
 
@@ -55,8 +55,9 @@ function FluxNLPModel(
   chain_ANN::T,
   data_train,
   data_test;
-  current_training_minibatch = first(data_train)current_test_minibatch =
-    first(data_test)size_minibatch::Int = 100,
+  current_training_minibatch = first(data_train),
+  current_test_minibatch = first(data_test),
+  size_minibatch::Int = 100,
   loss_f::F = Flux.mse, #Flux.crossentropy,
 ) where {T <: Chain, F <: Function}
   x0, rebuild = Flux.destructure(chain_ANN)
