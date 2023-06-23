@@ -1,11 +1,4 @@
 """
-    accuracy(nlp::AbstractFluxNLPModel)
-
-Compute the accuracy of the network `nlp.chain` on the entire test dataset.
-"""
-#TODO add the accuracy
-
-"""
     set_vars!(model::AbstractFluxNLPModel{T,S}, new_w::AbstractVector{T}) where {T<:Number, S}
 
 Sets the vaiables and rebuild the chain
