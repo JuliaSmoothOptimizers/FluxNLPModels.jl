@@ -4,7 +4,7 @@
 This step-by-step example assumes prior knowledge of [Julia](https://julialang.org/) and [Flux.jl](https://github.com/FluxML/Flux.jl).
 See the [Julia tutorial](https://julialang.org/learning/) and the [Flux.jl tutorial](https://fluxml.ai/Flux.jl/stable/models/quickstart/#man-quickstart) for more details.
 
-For more Examples, please refere to our sample folder at [samples](#TODO)
+<!-- For more Examples, please refere to our sample folder -->
 <!-- mlp_MNIST_examples.jl -->
 We have aligned this tutorial to [MLP_MNIST](https://github.com/FluxML/model-zoo/blob/master/vision/mlp_mnist/mlp_mnist.jl) example and reused some of their functions.
 
@@ -23,7 +23,6 @@ We will cover the following:
 - Using FluxNLPModels and access 
   - Gradient of current weight
   - Objective (or loss) evaluated at current weights 
-<!-- - TODO: Train with SGD and R2 using FluxNLPModels -->
 
 ### Packages needed
 ```@example FluxNLPModel
@@ -41,7 +40,7 @@ using JSOSolvers
 Here are some of the parameters that we use, The learning rate is only used for SGD method. 
 
    ```@example FluxNLPModel
-      @kwdef mutable struct Args
+      \@kwdef mutable struct Args
         η::Float32 = 3e-3       # learning rate
         batchsize::Int = 128    # batch size
         epochs::Int = 10        # number of epochs
