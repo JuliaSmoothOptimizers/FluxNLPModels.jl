@@ -9,6 +9,12 @@ using JSOSolvers
 
 const loss = logitcrossentropy
 
+# We discuss the process of loading datasets 
+# and defining minibatches for model training
+# using the Flux framework. 
+# To download and load the MNIST dataset from MLDataset,
+# follow these steps:
+
 function getdata(; T = Float32) #T for types
   ENV["DATADEPS_ALWAYS_ACCEPT"] = "true"
 
@@ -45,7 +51,7 @@ end
 train_loader, test_loader = create_batch()
 
 ## Construct Nural Network model
-
+device = cpu # or gpu
 model =
   Chain(
     Conv((5, 5), 1 => 6, relu),
@@ -56,7 +62,7 @@ model =
     Dense(256 => 120, relu),
     Dense(120 => 84, relu),
     Dense(84 => 10),
-  ) |> cpu
+  ) |> device
 
 nlp = FluxNLPModel(model, train_loader, test_loader; loss_f = loss)
 
