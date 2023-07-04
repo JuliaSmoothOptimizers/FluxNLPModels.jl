@@ -26,26 +26,13 @@ We will cover the following:
 ### Packages needed
 ```@example FluxNLPModel
 using FluxNLPModels
-using CUDA, Flux, NLPModels #CUDA is used for GPU
+using Flux, NLPModels
 using Flux.Data: DataLoader
-using Flux: onehotbatch, onecold
+using Flux: onehotbatch, onecold, @epochs
 using Flux.Losses: logitcrossentropy
 using MLDatasets
 using JSOSolvers
 ```
-
-### Parameters 
-Here are some of the parameters that we use, The learning rate is only used for SGD method. 
-
-```@example FluxNLPModel
-    η = 3e-3       # learning rate
-    batchsize= 128    # batch size
-    epochs = 10        # number of epochs
-    use_cuda = false   # use gpu (if cuda and gpu available)
-    verbose_freq = 10       # logging for every verbose_freq iterations
-
-``` 
-
 
 ### Setting Neural Network (NN) Model
 
@@ -56,7 +43,7 @@ We have two ways of defining the models:
 
 1. **Direct Definition**: You can directly define the model in your code, specifying the layers and their connections using Flux's syntax. This approach allows for more flexibility and customization.
    ```@example FluxNLPModel
-    model = Chain(Dense(28^2=> 32, relu), Dense(32=>10)) 
+    model = Flux.Chain(Dense(28^2=> 32, relu), Dense(32=>10)) 
    ```
 
 2. **Method-Based Definition**: Alternatively, you can create a method that returns the model. This method can encapsulate the specific architecture and parameters of the model, making it easier to reuse and manage. It provides a convenient way to define and initialize the model when needed.
@@ -78,10 +65,7 @@ We can define any loss function that we need, here we use Flux build-in logitcro
 const loss = Flux.logitcrossentropy
 ```
 
-We also definethe loss function `loss_and_accuracy`. It expects the following arguments:
-* ADataLoader object.
-* The `build_model` function we defined above.
-* A device object (in case we have a GPU available).
+We also define a loss function `loss_and_accuracy`. 
 ```@example FluxNLPModel
   function loss_and_accuracy(data_loader, model, device)
     acc = 0
@@ -136,7 +120,7 @@ end
 
 ```@example FluxNLPModel
   device = cpu
-  train_loader, test_loader = getdata(batchsize)
+  train_loader, test_loader = getdata(128)
 
   ## Construct model
   model = build_model() |> device
@@ -147,7 +131,7 @@ end
 
 
 
-
+ 
 ## Tools associated with a FluxNLPModel
 The problem dimension `n`, where `w` ∈ ℝⁿ:
 ```@example FluxNLPModel
@@ -171,24 +155,3 @@ The length of `w` must be `nlp.meta.nvar`.
 g = similar(w)
 NLPModels.grad!(nlp, w, g)
 ```
-
-
-
-## Chaning minibatch 
-By default, the training minibatch that evaluates the neural network doesn't change between evaluations.
-To change the training minibatch, as we do it in this very simple example of SGD:
-
-```@example FluxNLPModel
-# now we set the model to FluxNLPModel
-  g = similar(nlp.w) #TODO should they be here?
-  w_k = copy(nlp.w)
-  for epoch = 1:(epochs)
-    for (x, y) in train_loader
-      x, y = device(x), device(y) ## transfer data to device
-      nlp.current_training_minibatch = (x, y) # Change the minibatch
-      g = NLPModels.grad(nlp, w_k)
-      w_k -= η .* g      #   update the parameter
-      FluxNLPModels.set_vars!(nlp, w_k) 
-    end
-  end
-``` 
