@@ -1,6 +1,5 @@
 using FluxNLPModels
 using CUDA, Flux, NLPModels
-using Statistics
 using Flux.Data: DataLoader
 using Flux: onehotbatch, onecold, @epochs
 using Flux.Losses: logitcrossentropy

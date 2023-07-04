@@ -1,7 +1,6 @@
 using Test
 using FluxNLPModels
 using CUDA, Flux, NLPModels
-using Statistics
 using Flux.Data: DataLoader #TODO update this
 using Flux: onehotbatch, onecold, @epochs
 using Flux.Losses: logitcrossentropy
