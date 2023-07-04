@@ -147,7 +147,6 @@ end
   device = cpu
   train_loader, test_loader = getdata(args)
 
-  @info "Constructing model"
   ## Construct model
   model = build_model() |> device
 
