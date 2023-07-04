@@ -1,5 +1,5 @@
 name = "FluxNLPModels"
-uuid = "872abebc-2c0b-4005-be13-c3c8b8fd207d"
+uuid = "31fab0eb-bb78-4d15-8993-a8083bba6d27"
 authors = ["Farhad Rahbarnia <farhad.rahbarnia@polymtl.ca>"]
 version = "0.0.1"
 
@@ -10,7 +10,7 @@ JSOSolvers = "10dff2fc-5484-5881-a0e0-c90441020f8a"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MLDatasets = "eb30cadb-4394-5ae3-aed4-317e484a6458"
 NLPModels = "a4795742-8479-5a88-8948-cc11e1c8c1a6"
-Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f" 
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [compat]
 CUDA = "4.2.0"
@@ -22,12 +22,12 @@ Zygote = "0.6.49"
 julia = "^1.6.0"
 
 [extras]
-LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-SolverTest = "4343dc35-3317-4c6e-8877-f0cc8502c90e"
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Quadmath = "be4d8f0f-7fa4-5f49-b795-2f01399ab2dd"
+SolverTest = "4343dc35-3317-4c6e-8877-f0cc8502c90e"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["LinearAlgebra","BenchmarkTools", "Test"]
+test = ["LinearAlgebra", "BenchmarkTools", "Test"]

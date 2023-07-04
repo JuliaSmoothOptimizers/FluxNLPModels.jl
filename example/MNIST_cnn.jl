@@ -37,15 +37,12 @@ end
 function create_batch(; batchsize = 128)
   # Create DataLoaders (mini-batch iterators)
   xtrain, ytrain, xtest, ytest = getdata()
-  xtrain = reshape(xtrain, 28,28,1,:)
-  xtest = reshape(xtest, 28,28,1,:)
+  xtrain = reshape(xtrain, 28, 28, 1, :)
+  xtest = reshape(xtest, 28, 28, 1, :)
   train_loader = DataLoader((xtrain, ytrain), batchsize = batchsize, shuffle = true)
   test_loader = DataLoader((xtest, ytest), batchsize = batchsize)
   return train_loader, test_loader
 end
-
-
-
 
 train_loader, test_loader = create_batch()
 

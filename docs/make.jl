@@ -15,7 +15,7 @@ makedocs(
 )
 
 deploydocs(
-  repo = "github.com/Farhad-phd/FluxNLPModels.jl.git",
+  repo = "github.com/JuliaSmoothOptimizers/FluxNLPModels.jl.git",
   push_preview = true,
   devbranch = "main",
 )
