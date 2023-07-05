@@ -79,7 +79,7 @@ device = cpu #TODO should we test on GPU?
   @test_throws Exception FluxNLPModel(DN, [] , []) # if the both data is empty
 
   # Testing if the value of the first batch was passed it
-  DNNLPModel_2 =  FluxNLPModel(DN, train_data , test_data, first(train_data), first(test_data)) 
+  DNNLPModel_2 =  FluxNLPModel(DN, train_data , test_data, current_training_minibatch = first(train_data), current_test_minibatch =first(test_data)) 
 
   #checking if we can call accuracy
   train_acc = FluxNLPModels.accuracy(DNNLPModel_2; data_loader = train_data) # accuracy on train data
