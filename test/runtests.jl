@@ -100,6 +100,7 @@ end
   @test nlp.current_training_minibatch_status === nothing
   buffer_minibatch = deepcopy(nlp.current_training_minibatch)
   @test minibatch_next_train!(nlp) # should return true 
+  @test minibatch_next_train!(nlp) # should return true 
   @test !isequal(nlp.current_training_minibatch, buffer_minibatch)
   
   reset_minibatch_test!(nlp)
