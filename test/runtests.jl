@@ -1,7 +1,7 @@
 using Test
 using FluxNLPModels
 using CUDA, Flux, NLPModels
-using Flux.Data: DataLoader #TODO update this
+using Flux.Data: DataLoader
 using Flux: onehotbatch, onecold, @epochs
 using Flux.Losses: logitcrossentropy
 using Base: @kwdef
@@ -24,7 +24,7 @@ function getdata(args)
   # One-hot-encode the labels
   ytrain, ytest = onehotbatch(ytrain, 0:9), onehotbatch(ytest, 0:9)
 
-  # Create DataLoaders (mini-batch iterators) #TODO it is passed down
+  # Create DataLoaders (mini-batch iterators) 
   train_loader = DataLoader((xtrain, ytrain), batchsize = args.batchsize, shuffle = true)
   test_loader = DataLoader((xtest, ytest), batchsize = args.batchsize)
 
@@ -44,7 +44,7 @@ end
 
 args = Args() # collect options in a struct for convenience
 
-device = cpu #TODO should we test on GPU?
+device = cpu
 
 @testset "FluxNLPModels tests" begin
 

@@ -1,4 +1,3 @@
-#TODO redo this section 
 # FluxNLPModels.jl
 
 ## Compatibility
@@ -33,4 +32,4 @@ Check the [tutorial](https://jso.dev/FluxNLPModels.jl/dev/tutorial/).
 If you think you found a bug, feel free to open an [issue](https://github.com/JuliaSmoothOptimizers/FluxNLPModels.jl/issues). TODO: add repo link
 Focused suggestions and requests can also be opened as issues. Before opening a pull request, please start an issue or a discussion on the topic.
 
-If you have a question that is not suited for a bug report, feel free to start a discussion [here](#TODO). This forum is for general discussion about this repository and the [JuliaSmoothOptimizers](https://github.com/JuliaSmoothOptimizers). Questions about any of our packages are welcome.
+If you have a question that is not suited for a bug report, feel free to start a discussion [here](https://github.com/orgs/JuliaSmoothOptimizers/discussions). This forum is for general discussion about this repository and the [JuliaSmoothOptimizers](https://github.com/JuliaSmoothOptimizers). Questions about any of our packages are welcome.
