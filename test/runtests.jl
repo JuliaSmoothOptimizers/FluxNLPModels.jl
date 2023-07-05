@@ -75,11 +75,17 @@ device = cpu #TODO should we test on GPU?
   @test Flux.params(DNNLPModel.chain)[1][2] == x1[2]
 
   @test_throws Exception FluxNLPModel(DN, [], test_data) # if the train data is empty
-  @test_throws Exception FluxNLPModel(DN, train_data , []) # if the test data is empty
-  @test_throws Exception FluxNLPModel(DN, [] , []) # if the both data is empty
+  @test_throws Exception FluxNLPModel(DN, train_data, []) # if the test data is empty
+  @test_throws Exception FluxNLPModel(DN, [], []) # if the both data is empty
 
   # Testing if the value of the first batch was passed it
-  DNNLPModel_2 =  FluxNLPModel(DN, train_data , test_data, current_training_minibatch = first(train_data), current_test_minibatch =first(test_data)) 
+  DNNLPModel_2 = FluxNLPModel(
+    DN,
+    train_data,
+    test_data,
+    current_training_minibatch = first(train_data),
+    current_test_minibatch = first(test_data),
+  )
 
   #checking if we can call accuracy
   train_acc = FluxNLPModels.accuracy(DNNLPModel_2; data_loader = train_data) # accuracy on train data
@@ -102,10 +108,8 @@ end
   @test minibatch_next_train!(nlp) # should return true 
   @test minibatch_next_train!(nlp) # should return true 
   @test !isequal(nlp.current_training_minibatch, buffer_minibatch)
-  
+
   reset_minibatch_test!(nlp)
   @test minibatch_next_test!(nlp) # should return true 
   @test minibatch_next_test!(nlp) # should return true 
-
-
 end
