@@ -55,8 +55,8 @@ function FluxNLPModel(
   chain_ANN::T,
   data_train,
   data_test;
-  current_training_minibatch = first(data_train),
-  current_test_minibatch = first(data_test),
+  current_training_minibatch = [],
+  current_test_minibatch = [],
   size_minibatch::Int = 100,
   loss_f::F = Flux.mse, #Flux.crossentropy,
 ) where {T <: Chain, F <: Function}
@@ -65,6 +65,10 @@ function FluxNLPModel(
   meta = NLPModelMeta(n, x0 = x0)
   if (isempty(data_train) || isempty(data_test))
     error("train data or test is empty")
+  end
+  if (isempty(current_training_minibatch) || isempty(current_test_minibatch))
+    current_training_minibatch = first(data_train)
+    current_test_minibatch = first(data_test)
   end
 
   return FluxNLPModel(
