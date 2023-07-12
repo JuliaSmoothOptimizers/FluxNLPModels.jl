@@ -32,8 +32,8 @@ mutable struct FluxNLPModel{T, S, C <: Chain, F <: Function} <: AbstractFluxNLPM
   chain::C
   counters::Counters
   loss_f::F
-  size_minibatch::Int 
-  training_minibatch_iterator 
+  size_minibatch::Int
+  training_minibatch_iterator
   test_minibatch_iterator
   current_training_minibatch
   current_test_minibatch
