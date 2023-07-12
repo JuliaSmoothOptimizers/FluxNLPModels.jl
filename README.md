@@ -12,8 +12,7 @@ This package serves as an NLPModels interface to the [Flux.jl](https://github.co
 To use FluxNLPModels, add the package in the Julia package manager:
 
 ```julia
-# pkg> add FluxNLPModels
-# pkg> add https://github.com/JuliaSmoothOptimizers/FluxNLPModels.jl.git
+pkg> add FluxNLPModels
 ```
 
 ## How to Use
