@@ -9,7 +9,7 @@ function set_vars!(nlp::AbstractFluxNLPModel{T, S}, new_w::AbstractVector{T}) wh
 end
 
 function local_loss(nlp::AbstractFluxNLPModel{T, S}, x, y, w::AbstractVector{T}) where {T, S}
-  # increment!(nlp, :neval_obj) #TODO not sure @tangi ?
+  # increment!(nlp, :neval_obj) #TODO not sure 
   nlp.chain = nlp.rebuild(w)
   return nlp.loss_f(nlp.chain(x), y)
 end
@@ -35,7 +35,7 @@ function accuracy(
     acc += sum(onecold(ŷ) .== onecold(y)) ## Decode the output of the model
     num += size(x)[end]
   end
-  return acc / num #TODO make sure num is not zero @Tangi?
+  return acc / num #TODO make sure num is not zero
 end
 
 """
