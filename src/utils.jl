@@ -3,7 +3,7 @@
 
 Sets the vaiables and rebuild the chain
 """
-function set_vars!(nlp::AbstractFluxNLPModel{T, S}, new_w::AbstractVector{T}) where {T <: Number, S} #TODO test T 
+function set_vars!(nlp::AbstractFluxNLPModel{T, S}, new_w::AbstractVector{T}) where {T <: Number, S} 
   nlp.w .= new_w
   nlp.chain = nlp.rebuild(nlp.w)
 end

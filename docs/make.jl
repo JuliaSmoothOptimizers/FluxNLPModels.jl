@@ -1,4 +1,3 @@
-#TODO redo this section
 using Documenter, FluxNLPModels
 
 makedocs(
