@@ -4,15 +4,15 @@
 Julia ≥ 1.6.
 
 ## How to install
-TODO: this section needs work since our package is not yet register
+
 This module can be installed with the following command:
 ```julia
-# pkg> add FluxNLPModels
-# pkg> test FluxNLPModels
+pkg> add FluxNLPModels
 ```
 
 ## Synopsis
-FluxNLPModels exposes neural network models as optimization problems conforming to the NLPModels.jl API. FluxNLPModels is an interface between [Flux.jl](https://github.com/FluxML/Flux.jl)'s classification neural networks and [NLPModels.jl](https://github.com/JuliaSmoothOptimizers/NLPModels.jl.git).
+
+FluxNLPModels exposes neural network models as optimization problems conforming to the [NLPModels API](https://github.com/JuliaSmoothOptimizers/NLPModels.jl). FluxNLPModels is an interface between [Flux.jl](https://github.com/FluxML/Flux.jl)'s classification neural networks and [NLPModels.jl](https://github.com/JuliaSmoothOptimizers/NLPModels.jl).
 
 A `FluxNLPModel` gives the user access to:
 - The values of the neural network variables/weights `w`;
@@ -24,12 +24,7 @@ In addition, it provides tools to:
 - Retrieve the current minibatch ;
 - Measure the neural network's loss at the current `w`.
 
-## How to use
-Check the [tutorial](https://jso.dev/FluxNLPModels.jl/dev/tutorial/).
-
 # Bug reports and discussions
 
-If you think you found a bug, feel free to open an [issue](https://github.com/JuliaSmoothOptimizers/FluxNLPModels.jl/issues). TODO: add repo link
-Focused suggestions and requests can also be opened as issues. Before opening a pull request, please start an issue or a discussion on the topic.
+If you encounter any bugs or have suggestions for improvement, please open an [issue](https://github.com/JuliaSmoothOptimizers/FluxNLPModels.jl/issues). For general questions or discussions related to this repository and the [JuliaSmoothOptimizers](https://github.com/JuliaSmoothOptimizers) organization, feel free to start a discussion [here](https://github.com/JuliaSmoothOptimizers/Organization/discussions).
 
-If you have a question that is not suited for a bug report, feel free to start a discussion [here](https://github.com/orgs/JuliaSmoothOptimizers/discussions). This forum is for general discussion about this repository and the [JuliaSmoothOptimizers](https://github.com/JuliaSmoothOptimizers). Questions about any of our packages are welcome.
