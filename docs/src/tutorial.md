@@ -4,6 +4,7 @@
 This step-by-step example assumes prior knowledge of [Julia](https://julialang.org/) and [Flux.jl](https://github.com/FluxML/Flux.jl).
 See the [Julia tutorial](https://julialang.org/learning/) and the [Flux.jl tutorial](https://fluxml.ai/Flux.jl/stable/models/quickstart/#man-quickstart) for more details.
 
+
 We have aligned this tutorial to [MLP_MNIST](https://github.com/FluxML/model-zoo/blob/master/vision/mlp_mnist/mlp_mnist.jl) example and reused some of their functions.
 
 ### What we cover in this tutorial
@@ -25,6 +26,7 @@ We will cover the following:
 
 ### Packages needed
 ```@example FluxNLPModel
+
 using FluxNLPModels
 using Flux, NLPModels
 using Flux.Data: DataLoader
@@ -32,6 +34,7 @@ using Flux: onehotbatch, onecold, @epochs
 using Flux.Losses: logitcrossentropy
 using MLDatasets
 using JSOSolvers
+
 ```
 
 ### Setting Neural Network (NN) Model
@@ -55,12 +58,15 @@ We can define any loss function that we need, here we use Flux build-in logitcro
 const loss = Flux.logitcrossentropy
 ```
 
+
 ### Load datasets and define minibatch 
 In this section, we will cover the process of loading datasets and defining minibatches for training your model using Flux. Loading and preprocessing data is an essential step in machine learning, as it allows you to train your model on real-world examples.
 
 We will specifically focus on loading the MNIST dataset. We will divide the data into training and testing sets, ensuring that we have separate data for model training and evaluation.
 
 Additionally, we will define minibatches, which are subsets of the dataset that are used during the training process. Minibatches enable efficient training by processing a small batch of examples at a time, instead of the entire dataset. This technique helps in managing memory resources and improving convergence speed.
+
+
 
 ```@example FluxNLPModel
 function getdata(bs)
@@ -85,30 +91,22 @@ function getdata(bs)
 end
 ```
 
+
 ### Transfering to FluxNLPModels
 
-Definition of a LeNet NLPModel.
-More details about defining neural networks with Flux.jl can be found [here](http://fluxml.ai/Flux.jl/stable/).
 ```@example FluxNLPModel
   device = cpu
   train_loader, test_loader = getdata(128)
 
   ## Construct model
- LeNet =
-  Chain(
-    Conv((5, 5), 1 => 6, relu),
-    MaxPool((2, 2)),
-    Conv((5, 5), 6 => 16, relu),
-    MaxPool((2, 2)),
-    Flux.flatten,
-    Dense(256 => 120, relu),
-    Dense(120 => 84, relu),
-    Dense(84 => 10),
-  ) |> device
+  model = build_model() |> device
 
   # now we set the model to FluxNLPModel
-  nlp = FluxNLPModel(LeNet, train_loader, test_loader; loss_f = loss)
+  nlp = FluxNLPModel(model, train_loader, test_loader; loss_f = loss)
 ```
+
+
+
  
 ## Tools associated with a FluxNLPModel
 The problem dimension `n`, where `w` ∈ ℝⁿ:
