@@ -56,16 +56,16 @@ end</code></pre><pre class="documenter-example-output"><code class="nohighlight 
       jtprod_nln: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                 hess: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0                hprod: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
            jhess: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0               jhprod: ⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅⋅ 0     
 </code></pre><h2 id="Tools-associated-with-a-FluxNLPModel"><a class="docs-heading-anchor" href="#Tools-associated-with-a-FluxNLPModel">Tools associated with a FluxNLPModel</a><a id="Tools-associated-with-a-FluxNLPModel-1"></a><a class="docs-heading-anchor-permalink" href="#Tools-associated-with-a-FluxNLPModel" title="Permalink"></a></h2><p>The problem dimension <code>n</code>, where <code>w</code> ∈ ℝⁿ:</p><pre><code class="language-julia hljs">n = nlp.meta.nvar</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">25450</code></pre><h3 id="Get-the-current-network-weights:"><a class="docs-heading-anchor" href="#Get-the-current-network-weights:">Get the current network weights:</a><a id="Get-the-current-network-weights:-1"></a><a class="docs-heading-anchor-permalink" href="#Get-the-current-network-weights:" title="Permalink"></a></h3><pre><code class="language-julia hljs">w = nlp.w</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">25450-element Vector{Float32}:
-  0.02499428
- -0.006650823
-  0.06677229
- -0.0090256035
- -0.055536643
- -0.04371798
-  0.0007649718
-  0.021249501
- -0.018129151
- -0.014075439
+ -0.051935475
+  0.02238848
+ -0.01105918
+ -0.07149538
+  0.06997301
+ -0.06879418
+ -0.02341662
+ -0.044051692
+ -0.04764745
+ -0.06959699
   ⋮
   0.0
   0.0
@@ -76,7 +76,7 @@ end</code></pre><pre class="documenter-example-output"><code class="nohighlight 
   0.0
   0.0
   0.0</code></pre><h3 id="Evaluate-the-loss-function-(i.e.-the-objective-function)-at-w:"><a class="docs-heading-anchor" href="#Evaluate-the-loss-function-(i.e.-the-objective-function)-at-w:">Evaluate the loss function (i.e. the objective function) at <code>w</code>:</a><a id="Evaluate-the-loss-function-(i.e.-the-objective-function)-at-w:-1"></a><a class="docs-heading-anchor-permalink" href="#Evaluate-the-loss-function-(i.e.-the-objective-function)-at-w:" title="Permalink"></a></h3><pre><code class="language-julia hljs">using NLPModels
-NLPModels.obj(nlp, w)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2.4475234f0</code></pre><p>The length of <code>w</code> must be <code>nlp.meta.nvar</code>.</p><h3 id="Evaluate-the-gradient-at-w:"><a class="docs-heading-anchor" href="#Evaluate-the-gradient-at-w:">Evaluate the gradient at <code>w</code>:</a><a id="Evaluate-the-gradient-at-w:-1"></a><a class="docs-heading-anchor-permalink" href="#Evaluate-the-gradient-at-w:" title="Permalink"></a></h3><pre><code class="language-julia hljs">g = similar(w)
+NLPModels.obj(nlp, w)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2.324419f0</code></pre><p>The length of <code>w</code> must be <code>nlp.meta.nvar</code>.</p><h3 id="Evaluate-the-gradient-at-w:"><a class="docs-heading-anchor" href="#Evaluate-the-gradient-at-w:">Evaluate the gradient at <code>w</code>:</a><a id="Evaluate-the-gradient-at-w:-1"></a><a class="docs-heading-anchor-permalink" href="#Evaluate-the-gradient-at-w:" title="Permalink"></a></h3><pre><code class="language-julia hljs">g = similar(w)
 NLPModels.grad!(nlp, w, g)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">25450-element Vector{Float32}:
   0.0
   0.0
@@ -89,12 +89,12 @@ NLPModels.grad!(nlp, w, g)</code></pre><pre class="documenter-example-output"><c
   0.0
   0.0
   ⋮
- -0.020639237
-  0.0134820575
- -0.06274812
-  0.029623799
-  0.060183413
-  0.004239023
- -0.025867615
-  0.007759564
- -0.013638812</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><a class="docs-footer-nextpage" href="../reference/">Reference »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Wednesday 12 July 2023 16:51">Wednesday 12 July 2023</span>. Using Julia version 1.9.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ -0.10413932
+  0.04970005
+ -0.006286945
+ -0.02683461
+  0.037397075
+  0.02268945
+  0.020220693
+ -0.022932636
+  0.0123267025</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><a class="docs-footer-nextpage" href="../reference/">Reference »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Wednesday 12 July 2023 16:55">Wednesday 12 July 2023</span>. Using Julia version 1.9.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
