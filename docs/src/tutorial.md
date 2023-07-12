@@ -26,7 +26,6 @@ We will cover the following:
 
 ### Packages needed
 ```@example FluxNLPModel
-
 using FluxNLPModels
 using Flux, NLPModels
 using Flux.Data: DataLoader
@@ -34,7 +33,6 @@ using Flux: onehotbatch, onecold, @epochs
 using Flux.Losses: logitcrossentropy
 using MLDatasets
 using JSOSolvers
-
 ```
 
 ### Setting Neural Network (NN) Model
@@ -58,15 +56,12 @@ We can define any loss function that we need, here we use Flux build-in logitcro
 const loss = Flux.logitcrossentropy
 ```
 
-
 ### Load datasets and define minibatch 
 In this section, we will cover the process of loading datasets and defining minibatches for training your model using Flux. Loading and preprocessing data is an essential step in machine learning, as it allows you to train your model on real-world examples.
 
 We will specifically focus on loading the MNIST dataset. We will divide the data into training and testing sets, ensuring that we have separate data for model training and evaluation.
 
 Additionally, we will define minibatches, which are subsets of the dataset that are used during the training process. Minibatches enable efficient training by processing a small batch of examples at a time, instead of the entire dataset. This technique helps in managing memory resources and improving convergence speed.
-
-
 
 ```@example FluxNLPModel
 function getdata(bs)
@@ -91,7 +86,6 @@ function getdata(bs)
 end
 ```
 
-
 ### Transfering to FluxNLPModels
 
 ```@example FluxNLPModel
@@ -105,9 +99,6 @@ end
   nlp = FluxNLPModel(model, train_loader, test_loader; loss_f = loss)
 ```
 
-
-
- 
 ## Tools associated with a FluxNLPModel
 The problem dimension `n`, where `w` ∈ ℝⁿ:
 ```@example FluxNLPModel
@@ -130,4 +121,16 @@ The length of `w` must be `nlp.meta.nvar`.
 ```@example FluxNLPModel
 g = similar(w)
 NLPModels.grad!(nlp, w, g)
+```
+
+## Train a neural network with JSOSOlvers.R2
+
+```@example FluxNLPModel
+max_time = 60. # run at most 1min
+callback = (nlp, 
+            solver, 
+            stats) -> FluxNLPModels.minibatch_next_train!(nlp)
+
+solver_stats = R2(nlp; callback, max_time)
+test_accuracy = FluxNLPModels.accuracy(nlp) #check the accuracy
 ```
