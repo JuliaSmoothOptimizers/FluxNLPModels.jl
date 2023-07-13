@@ -123,7 +123,7 @@ g = similar(w)
 NLPModels.grad!(nlp, w, g)
 ```
 
-## Train a neural network with JSOSOlvers.R2
+## Train a neural network with JSOSolvers.R2
 
 ```@example FluxNLPModel
 max_time = 60. # run at most 1min
