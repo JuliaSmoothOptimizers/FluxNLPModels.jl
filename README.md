@@ -5,7 +5,7 @@
 [![Build Status](https://github.com/JuliaSmoothOptimizers/FluxNLPModels.jl/workflows/CI/badge.svg)](https://github.com/JuliaSmoothOptimizers/FluxNLPModels.jl/actions)
 [![Codecov](https://codecov.io/gh/JuliaSmoothOptimizers/FluxNLPModels.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/JuliaSmoothOptimizers/FluxNLPModels.jl) 
 
-This package serves as an NLPModels interface to the [Flux.jl](https://github.com/FluxML/Flux.jl) deep learning framework. It enables seamless integration between Flux's neural network architectures and NLPModels' optimization tools for natural language processing tasks.
+This package serves as an NLPModels interface to the [Flux.jl](https://github.com/FluxML/Flux.jl) deep learning framework. It enables seamless integration between Flux's neural network architectures and NLPModels' optimization tools for non-linear programming (NLP) problems.
 
 ## Installation
 
