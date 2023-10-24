@@ -113,3 +113,7 @@ end
   @test minibatch_next_test!(nlp) # should return true 
   @test minibatch_next_test!(nlp) # should return true 
 end
+
+@testset "Multi-precision support" begin
+  include("multi_prec_test.jl")
+end

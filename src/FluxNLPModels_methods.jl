@@ -11,11 +11,12 @@ Evaluate `f(w)`, the objective function of `nlp` at `w`.
 - `f_w`: the new objective function.
 
 """
-function NLPModels.obj(nlp::AbstractFluxNLPModel{T, S}, w::AbstractVector{T}) where {T, S}
+function NLPModels.obj(nlp::AbstractFluxNLPModel{T, S}, w::AbstractVector) where {T, S}
   increment!(nlp, :neval_obj)
   set_vars!(nlp, w)
   x, y = nlp.current_training_minibatch
-  return nlp.loss_f(nlp.chain(x), y)
+  type_ind = find_type_index(nlp,w)
+  return nlp.loss_f(nlp.chain[type_ind](x), y)
 end
 
 """
@@ -34,14 +35,26 @@ Evaluate `∇f(w)`, the gradient of the objective function at `w` in place.
 """
 function NLPModels.grad!(
   nlp::AbstractFluxNLPModel{T, S},
-  w::AbstractVector{T},
-  g::AbstractVector{T},
+  w::AbstractVector,
+  g::AbstractVector,
 ) where {T, S}
   @lencheck nlp.meta.nvar w g
-  increment!(nlp, :neval_grad)
   x, y = nlp.current_training_minibatch
-  g .= gradient(w_g -> local_loss(nlp, x, y, w_g), w)[1]
+  #check_weights_data_type(w,x)
+  increment!(nlp, :neval_grad)
+  type_ind = find_type_index(nlp,w)
+  nlp.chain[type_ind] = nlp.rebuild[type_ind](w)
+  
+  g .= gradient(w_g -> local_loss(nlp,nlp.rebuild[type_ind],x,y,w_g),w)[1]
   return g
+end
+
+function NLPModels.grad(
+  nlp::AbstractFluxNLPModel{T, S},
+  w::AbstractVector,
+) where {T, S}
+  g = similar(w)
+  grad!(nlp,w,g)
 end
 
 """
@@ -68,9 +81,8 @@ function NLPModels.objgrad!(
   increment!(nlp, :neval_grad)
   set_vars!(nlp, w)
 
-  x, y = nlp.current_training_minibatch
-  f_w = nlp.loss_f(nlp.chain(x), y)
-  g .= gradient(w_g -> local_loss(nlp, x, y, w_g), w)[1]
+  f_w = obj(nlp,w)
+  grad!(nlp,w,g)
 
   return f_w, g
 end

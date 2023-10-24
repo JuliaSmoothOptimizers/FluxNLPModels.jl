@@ -29,7 +29,7 @@ A FluxNLPModel has fields
 """
 mutable struct FluxNLPModel{T, S, C <: Chain, F <: Function} <: AbstractFluxNLPModel{T, S}
   meta::NLPModelMeta{T, S}
-  chain::C
+  chain::Vector{C}
   counters::Counters
   loss_f::F
   size_minibatch::Int
@@ -37,22 +37,33 @@ mutable struct FluxNLPModel{T, S, C <: Chain, F <: Function} <: AbstractFluxNLPM
   test_minibatch_iterator
   current_training_minibatch
   current_test_minibatch
-  rebuild # this is used to create the rebuild of flat function 
+  rebuild # this is used to create the rebuild of flat function
   current_training_minibatch_status
   current_test_minibatch_status
   w::S
+  Types::Vector{DataType}
 end
 
 """
-    FluxNLPModel(chain_ANN data_train=MLDatasets.MNIST.traindata(Float32), data_test=MLDatasets.MNIST.testdata(Float32); size_minibatch=100)
+    FluxNLPModel(chain_ANN, data_train=MLDatasets.MNIST.traindata(Float32), data_test=MLDatasets.MNIST.testdata(Float32); size_minibatch=100)
 
 Build a `FluxNLPModel` from the neural network represented by `chain_ANN`.
 `chain_ANN` is built using [Flux.jl](https://fluxml.ai/) for more details.
 The other data required are: an iterator over the training dataset `data_train`, an iterator over the test dataset `data_test` and the size of the minibatch `size_minibatch`.
 Suppose `(xtrn,ytrn) = Fluxnlp.data_train`
 """
+
 function FluxNLPModel(
-  chain_ANN::T,
+  chain_ANN::C,
+  data_train,
+  data_test;
+  kwargs...
+) where {C <: Chain}
+  FluxNLPModel([chain_ANN],data_train,data_test;kwargs...)
+end
+
+function FluxNLPModel(
+  chain_ANN::Vector{T},
   data_train,
   data_test;
   current_training_minibatch = [],
@@ -60,7 +71,10 @@ function FluxNLPModel(
   size_minibatch::Int = 100,
   loss_f::F = Flux.mse, #Flux.crossentropy,
 ) where {T <: Chain, F <: Function}
-  x0, rebuild = Flux.destructure(chain_ANN)
+  d = Flux.destructure.(chain_ANN)
+  rebuild = [del[2] for del in d]
+  x0 = d[end][1]
+  Types = eltype.([del[1] for del in d])
   n = length(x0)
   meta = NLPModelMeta(n, x0 = x0)
   if (isempty(data_train) || isempty(data_test))
@@ -70,7 +84,8 @@ function FluxNLPModel(
     current_training_minibatch = first(data_train)
     current_test_minibatch = first(data_test)
   end
-
+  test_types_consistency(Types,data_train,data_test)
+  test_devices_consistency(chain_ANN,data_train,data_test)
   return FluxNLPModel(
     meta,
     chain_ANN,
@@ -85,6 +100,7 @@ function FluxNLPModel(
     nothing,
     nothing,
     x0,
+    Types,
   )
 end
 
