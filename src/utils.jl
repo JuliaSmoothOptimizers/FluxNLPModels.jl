@@ -148,14 +148,16 @@ end
   Tests FluxNLPModel loader and NN device consistency.
 """
 function test_devices_consistency(chain_ANN::Vector{T},data_train,data_test) where {T <: Chain}
-  is_chain_gpu = [typeof(c) <: CuArray for c in chain_ANN]
+  d = Flux.destructure.(chain_ANN)
+  weights = [del[1] for del in d]
+  is_chain_gpu = [typeof(w) <: CuArray for w in weights]
   if !in(sum(is_chain_gpu),[0,length(chain_ANN)])
     @error "Chain models should all be on the same device."
   end
   is_all_chain_gpu = is_chain_gpu[1]
   is_train_gpu = typeof(first(data_train)[1]) <: CuArray
   is_test_gpu = typeof(first(data_test)[1]) <: CuArray
-  @show is_all_chain_gpu is_train_gpu is_test_gpu
+  @show is_chain_gpu is_all_chain_gpu is_train_gpu is_test_gpu
   if is_all_chain_gpu != is_train_gpu
     @error "train loader and models are not on the same device."
   end
