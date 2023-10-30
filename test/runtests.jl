@@ -121,8 +121,7 @@ device = cpu
   # Construct model in Float32
   DN = build_model() |> device
   nlp = FluxNLPModel(DN, train_data, test_data)
-  
-  
+
   x1 = copy(nlp.w)
   obj_x1 = obj(nlp, x1)
   grad_x1 = NLPModels.grad(nlp, x1)

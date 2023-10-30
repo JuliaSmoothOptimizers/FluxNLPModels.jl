@@ -79,7 +79,7 @@ function NLPModels.objgrad!(
   nlp::AbstractFluxNLPModel{T, S},
   w::AbstractVector{V},
   g::AbstractVector{T},
-) where {T,V, S}
+) where {T, V, S}
   @lencheck nlp.meta.nvar w g
 
   if (T != V)  # we check if the types are the same, 
