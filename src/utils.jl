@@ -1,26 +1,4 @@
 """
-    update_type!(nlp::AbstractFluxNLPModel{T, S}, w::AbstractVector{V}) where {T,V, S}
-
-
-Sets the vaiables and rebuild the chain to a sepecific type defined by weigths 
-"""
-function update_type!(nlp::AbstractFluxNLPModel{T, S}, w::AbstractVector{V}) where {T, V, S}
-  if V == Float16
-    Local_chain = f16(nlp.chain)
-  elseif V == Float64
-    Local_chain = f64(nlp.chain)
-  elseif V == Float32
-    Local_chain = f32(nlp.chain)
-  else
-    error("The package only support Float16, Float32 and Float64")
-  end
-
-  # this is same for all the cases
-  nlp.chain = Local_chain
-  -, nlp.rebuild = Flux.destructure(nlp.chain)
-end
-
-"""
     set_vars!(model::AbstractFluxNLPModel{T,S}, new_w::AbstractVector{T}) where {T<:Number, S}
 
 Sets the vaiables and rebuild the chain

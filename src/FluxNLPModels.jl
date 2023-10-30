@@ -5,7 +5,7 @@ using Flux: onehotbatch, onecold, @epochs
 export AbstractFluxNLPModel, FluxNLPModel
 export reset_minibatch_train!, reset_minibatch_test!
 export minibatch_next_train!, minibatch_next_test!
-export accuracy, set_vars!, local_loss, update_type!
+export accuracy, set_vars!, local_loss
 
 abstract type AbstractFluxNLPModel{T, S} <: AbstractNLPModel{T, S} end
 
@@ -58,7 +58,7 @@ function FluxNLPModel(
   current_training_minibatch = [],
   current_test_minibatch = [],
   size_minibatch::Int = 100,
-  loss_f::F = Flux.crossentropy,#Flux.mse, #
+  loss_f::F = Flux.mse, #Flux.crossentropy,
 ) where {T <: Chain, F <: Function}
   x0, rebuild = Flux.destructure(chain_ANN)
   n = length(x0)
