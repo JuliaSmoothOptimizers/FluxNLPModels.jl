@@ -11,14 +11,12 @@ Evaluate `f(w)`, the objective function of `nlp` at `w`. if `w` and `nlp` precis
 - `f_w`: the new objective function.
 
 """
-function NLPModels.obj(nlp::AbstractFluxNLPModel{T, S}, w::AbstractVector{V}) where {T, V, S}
+function NLPModels.obj(nlp::AbstractFluxNLPModel{T, S}, w::AbstractVector{V}) where {T, S, V}
   x, y = nlp.current_training_minibatch
 
-  if (T != V)  # we check if the types are the same, 
-    update_type!(nlp, w)
-    if eltype(x) != V #TODO check if the user have changed the typed ?
-      x = V.(x)
-    end
+  eltype(nlp.w) == V || update_type!(nlp, w) #Check if the type has changed 
+  if eltype(x) != V
+    x = V.(x)
   end
 
   set_vars!(nlp, w)
@@ -43,15 +41,15 @@ Evaluate `∇f(w)`, the gradient of the objective function at `w` in place.
 function NLPModels.grad!(
   nlp::AbstractFluxNLPModel{T, S},
   w::AbstractVector{V},
-  g::AbstractVector{T},
-) where {T, V, S}
+  g::AbstractVector{V},
+) where {T, S, V}
   @lencheck nlp.meta.nvar w g
   x, y = nlp.current_training_minibatch
 
-  if (T != V)  # we check if the types are the same, 
+  if (eltype(nlp.w) != V)  # we check if the types are the same, 
     update_type!(nlp, w)
     g = V.(g)
-    if eltype(x) != V #TODO check if the user have changed the typed ?
+    if eltype(x) != V
       x = V.(x)
     end
   end
@@ -78,14 +76,14 @@ Evaluate both `f(w)`, the objective function of `nlp` at `w`, and `∇f(w)`, the
 function NLPModels.objgrad!(
   nlp::AbstractFluxNLPModel{T, S},
   w::AbstractVector{V},
-  g::AbstractVector{T},
-) where {T,V, S}
+  g::AbstractVector{V},
+) where {T, S, V}
   @lencheck nlp.meta.nvar w g
 
-  if (T != V)  # we check if the types are the same, 
+  if (eltype(nlp.w) != V)  # we check if the types are the same, 
     update_type!(nlp, w)
     g = V.(g)
-    if eltype(x) != V #TODO check if the user have changed the typed ?
+    if eltype(x) != V
       x = V.(x)
     end
   end

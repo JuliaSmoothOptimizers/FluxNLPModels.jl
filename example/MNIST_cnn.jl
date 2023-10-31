@@ -1,7 +1,7 @@
 using FluxNLPModels
 using CUDA, Flux, NLPModels
 using Flux.Data: DataLoader
-using Flux: onehotbatch, onecold, @epochs
+using Flux: onehotbatch, onecold
 using Flux.Losses: logitcrossentropy
 using MLDatasets
 using JSOSolvers
@@ -57,7 +57,7 @@ model =
     Flux.flatten,
     Dense(256 => 120, relu),
     Dense(120 => 84, relu),
-    Dense(84 => 10),
+    Dense(84 => 10),#TODO add softmax
   ) |> device
 
 nlp = FluxNLPModel(model, train_loader, test_loader; loss_f = loss)

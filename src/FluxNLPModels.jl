@@ -1,16 +1,16 @@
 module FluxNLPModels
 
 using Flux, NLPModels
-using Flux: onehotbatch, onecold, @epochs
 export AbstractFluxNLPModel, FluxNLPModel
 export reset_minibatch_train!, reset_minibatch_test!
 export minibatch_next_train!, minibatch_next_test!
 export accuracy, set_vars!, local_loss, update_type!
+using Flux: onehotbatch, onecold
 
 abstract type AbstractFluxNLPModel{T, S} <: AbstractNLPModel{T, S} end
 
 """ 
-    FluxNLPModel{T, S, C <: Flux.Chain} <: AbstractNLPModel{T, S}
+    FluxNLPModel{T, S, C } <: AbstractNLPModel{T, S}
 
 Data structure that makes the interfaces between neural networks defined with [Flux.jl](https://fluxml.ai/) and [NLPModels](https://github.com/JuliaSmoothOptimizers/NLPModels.jl).
 A FluxNLPModel has fields
@@ -27,9 +27,9 @@ A FluxNLPModel has fields
 - `current_minibatch_test` is the current test minibatch, it is not used in practice;
 - `w` is the vector of weights/variables;
 """
-mutable struct FluxNLPModel{T, S, C <: Chain, F <: Function} <: AbstractFluxNLPModel{T, S}
+mutable struct FluxNLPModel{T, S, F <: Function} <: AbstractFluxNLPModel{T, S}
   meta::NLPModelMeta{T, S}
-  chain::C
+  chain
   counters::Counters
   loss_f::F
   size_minibatch::Int
@@ -52,14 +52,14 @@ The other data required are: an iterator over the training dataset `data_train`,
 Suppose `(xtrn,ytrn) = Fluxnlp.data_train`
 """
 function FluxNLPModel(
-  chain_ANN::T,
+  chain_ANN,
   data_train,
   data_test;
   current_training_minibatch = [],
   current_test_minibatch = [],
   size_minibatch::Int = 100,
   loss_f::F = Flux.crossentropy,#Flux.mse, #
-) where {T <: Chain, F <: Function}
+) where {F <: Function}
   x0, rebuild = Flux.destructure(chain_ANN)
   n = length(x0)
   meta = NLPModelMeta(n, x0 = x0)

@@ -29,7 +29,7 @@ We will cover the following:
 using FluxNLPModels
 using Flux, NLPModels
 using Flux.Data: DataLoader
-using Flux: onehotbatch, onecold, @epochs
+using Flux: onehotbatch, onecold
 using Flux.Losses: logitcrossentropy
 using MLDatasets
 using JSOSolvers

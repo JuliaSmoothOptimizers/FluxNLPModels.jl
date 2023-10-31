@@ -6,18 +6,17 @@ Sets the vaiables and rebuild the chain to a sepecific type defined by weigths
 """
 function update_type!(nlp::AbstractFluxNLPModel{T, S}, w::AbstractVector{V}) where {T, V, S}
   if V == Float16
-    Local_chain = f16(nlp.chain)
+    local_chain = f16(nlp.chain)
   elseif V == Float64
-    Local_chain = f64(nlp.chain)
+    local_chain = f64(nlp.chain)
   elseif V == Float32
-    Local_chain = f32(nlp.chain)
+    local_chain = f32(nlp.chain)
   else
     error("The package only support Float16, Float32 and Float64")
   end
 
-  # this is same for all the cases
-  nlp.chain = Local_chain
-  -, nlp.rebuild = Flux.destructure(nlp.chain)
+  nlp.chain = local_chain
+  nlp.w, nlp.rebuild = Flux.destructure(nlp.chain)
 end
 
 """
@@ -25,12 +24,15 @@ end
 
 Sets the vaiables and rebuild the chain
 """
-function set_vars!(nlp::AbstractFluxNLPModel{T, S}, new_w::AbstractVector{T}) where {T <: Number, S}
+function set_vars!(
+  nlp::AbstractFluxNLPModel{T, S},
+  new_w::AbstractVector{V},
+) where {T <: Number, S, V}
   nlp.w .= new_w
   nlp.chain = nlp.rebuild(nlp.w)
 end
 
-function local_loss(nlp::AbstractFluxNLPModel{T, S}, x, y, w::AbstractVector{T}) where {T, S}
+function local_loss(nlp::AbstractFluxNLPModel{T, S}, x, y, w::AbstractVector{V}) where {T, S, V}
   # increment!(nlp, :neval_obj) #TODO not sure 
   nlp.chain = nlp.rebuild(w)
   return nlp.loss_f(nlp.chain(x), y)
