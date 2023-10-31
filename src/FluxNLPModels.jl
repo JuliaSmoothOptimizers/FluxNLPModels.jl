@@ -9,7 +9,7 @@ export accuracy, set_vars!, local_loss
 
 abstract type AbstractFluxNLPModel{T, S} <: AbstractNLPModel{T, S} end
 
-""" 
+"""
     FluxNLPModel{T, S, C <: Flux.Chain} <: AbstractNLPModel{T, S}
 
 Data structure that makes the interfaces between neural networks defined with [Flux.jl](https://fluxml.ai/) and [NLPModels](https://github.com/JuliaSmoothOptimizers/NLPModels.jl).
@@ -29,7 +29,7 @@ A FluxNLPModel has fields
 """
 mutable struct FluxNLPModel{T, S, C <: Chain, F <: Function} <: AbstractFluxNLPModel{T, S}
   meta::NLPModelMeta{T, S}
-  chain::C
+  chain::Vector{C}
   counters::Counters
   loss_f::F
   size_minibatch::Int
@@ -37,14 +37,15 @@ mutable struct FluxNLPModel{T, S, C <: Chain, F <: Function} <: AbstractFluxNLPM
   test_minibatch_iterator
   current_training_minibatch
   current_test_minibatch
-  rebuild # this is used to create the rebuild of flat function 
+  rebuild # this is used to create the rebuild of flat function
   current_training_minibatch_status
   current_test_minibatch_status
   w::S
+  Types::Vector{DataType}
 end
 
 """
-    FluxNLPModel(chain_ANN data_train=MLDatasets.MNIST.traindata(Float32), data_test=MLDatasets.MNIST.testdata(Float32); size_minibatch=100)
+    FluxNLPModel(chain_ANN, data_train=MLDatasets.MNIST.traindata(Float32), data_test=MLDatasets.MNIST.testdata(Float32); size_minibatch=100)
 
 Build a `FluxNLPModel` from the neural network represented by `chain_ANN`.
 `chain_ANN` is built using [Flux.jl](https://fluxml.ai/) for more details.
@@ -55,12 +56,20 @@ function FluxNLPModel(
   chain_ANN::T,
   data_train,
   data_test;
+  Formats = [],
   current_training_minibatch = [],
   current_test_minibatch = [],
   size_minibatch::Int = 100,
   loss_f::F = Flux.mse, #Flux.crossentropy,
 ) where {T <: Chain, F <: Function}
-  x0, rebuild = Flux.destructure(chain_ANN)
+  chain = [chain_ANN]
+  if !isempty(Formats)
+    chain = [f(chain_ANN) for f in Formats]
+  end
+  d = Flux.destructure.(chain)
+  rebuild = [del[2] for del in d]
+  x0 = d[end][1]
+  Types = eltype.([del[1] for del in d])
   n = length(x0)
   meta = NLPModelMeta(n, x0 = x0)
   if (isempty(data_train) || isempty(data_test))
@@ -70,10 +79,11 @@ function FluxNLPModel(
     current_training_minibatch = first(data_train)
     current_test_minibatch = first(data_test)
   end
-
+  test_types_consistency(Types,data_train,data_test)
+  test_devices_consistency(chain,data_train,data_test)
   return FluxNLPModel(
     meta,
-    chain_ANN,
+    chain,
     Counters(),
     loss_f,
     size_minibatch,
@@ -85,6 +95,7 @@ function FluxNLPModel(
     nothing,
     nothing,
     x0,
+    Types,
   )
 end
 
