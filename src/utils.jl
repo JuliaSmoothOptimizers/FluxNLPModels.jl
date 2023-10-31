@@ -152,16 +152,15 @@ function test_devices_consistency(chain_ANN::Vector{T},data_train,data_test) whe
   weights = [del[1] for del in d]
   is_chain_gpu = [typeof(w) <: CuArray for w in weights]
   if !in(sum(is_chain_gpu),[0,length(chain_ANN)])
-    @error "Chain models should all be on the same device."
+    error("Chain models should all be on the same device.")
   end
   is_all_chain_gpu = is_chain_gpu[1]
   is_train_gpu = typeof(first(data_train)[1]) <: CuArray
   is_test_gpu = typeof(first(data_test)[1]) <: CuArray
-  @show is_chain_gpu is_all_chain_gpu is_train_gpu is_test_gpu
   if is_all_chain_gpu != is_train_gpu
-    @error "train loader and models are not on the same device."
+    error("train loader and models are not on the same device.")
   end
   if is_all_chain_gpu != is_test_gpu
-    @error "test loader and models are not on the same device."
+    error("test loader and models are not on the same device.")
   end
 end

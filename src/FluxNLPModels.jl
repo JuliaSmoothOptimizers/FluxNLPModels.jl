@@ -56,13 +56,16 @@ function FluxNLPModel(
   chain_ANN::T,
   data_train,
   data_test;
-  Formats = [f16,f32,f64],
+  Formats = [],
   current_training_minibatch = [],
   current_test_minibatch = [],
   size_minibatch::Int = 100,
   loss_f::F = Flux.mse, #Flux.crossentropy,
 ) where {T <: Chain, F <: Function}
-  chain = [f(chain_ANN) for f in Formats]
+  chain = [chain_ANN]
+  if !isempty(Formats)
+    chain = [f(chain_ANN) for f in Formats]
+  end
   d = Flux.destructure.(chain)
   rebuild = [del[2] for del in d]
   x0 = d[end][1]
@@ -77,10 +80,10 @@ function FluxNLPModel(
     current_test_minibatch = first(data_test)
   end
   test_types_consistency(Types,data_train,data_test)
-  test_devices_consistency(chain_ANN,data_train,data_test)
+  test_devices_consistency(chain,data_train,data_test)
   return FluxNLPModel(
     meta,
-    chain_ANN,
+    chain,
     Counters(),
     loss_f,
     size_minibatch,

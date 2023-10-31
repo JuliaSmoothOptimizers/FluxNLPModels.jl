@@ -9,6 +9,11 @@ model16_cpu = Chain(
     BatchNorm(3),
     Dense(3 => 2),
     softmax) |> f16
+model32_gpu = Chain(
+  Dense(2 => 3, tanh),   # activation function inside layer
+  BatchNorm(3),
+  Dense(3 => 2),
+  softmax) |> gpu
 
 loader_cpu = Flux.DataLoader((noisy, target) |> f16, batchsize=64);
 loader_gpu = Flux.DataLoader((noisy, target) |> gpu, batchsize=64);
@@ -35,7 +40,7 @@ loader_gpu = Flux.DataLoader((noisy, target) |> gpu, batchsize=64);
 end
 
 @testset "obj/grad FP formats consistency" begin
-  nlp = FluxNLPModel(model16_cpu,loader_cpu,loader_cpu)
+  nlp = FluxNLPModel(model16_cpu,loader_cpu,loader_cpu,Formats = [f16,f32])
   x16,_ = Flux.destructure(model16_cpu)
   @test typeof(obj(nlp,x16)) == eltype(x16)
   @test eltype(grad(nlp,x16)) == eltype(x16)
@@ -52,7 +57,7 @@ end
   @test eltype(g32) == eltype(x32)
 
   # gpu
-  nlp = FluxNLPModel([model32_gpu],loader_gpu,loader_gpu)
+  nlp = FluxNLPModel(model32_gpu,loader_gpu,loader_gpu)
   x32,_ = Flux.destructure(model32_gpu)
   @test typeof(obj(nlp,x32)) == eltype(x32)
   @test eltype(grad(nlp,x32)) == eltype(x32)
