@@ -9,7 +9,7 @@ export accuracy, set_vars!, local_loss
 
 abstract type AbstractFluxNLPModel{T, S} <: AbstractNLPModel{T, S} end
 
-""" 
+"""
     FluxNLPModel{T, S, C <: Flux.Chain} <: AbstractNLPModel{T, S}
 
 Data structure that makes the interfaces between neural networks defined with [Flux.jl](https://fluxml.ai/) and [NLPModels](https://github.com/JuliaSmoothOptimizers/NLPModels.jl).
@@ -52,26 +52,18 @@ Build a `FluxNLPModel` from the neural network represented by `chain_ANN`.
 The other data required are: an iterator over the training dataset `data_train`, an iterator over the test dataset `data_test` and the size of the minibatch `size_minibatch`.
 Suppose `(xtrn,ytrn) = Fluxnlp.data_train`
 """
-
 function FluxNLPModel(
-  chain_ANN::C,
+  chain_ANN::T,
   data_train,
   data_test;
-  kwargs...
-) where {C <: Chain}
-  FluxNLPModel([chain_ANN],data_train,data_test;kwargs...)
-end
-
-function FluxNLPModel(
-  chain_ANN::Vector{T},
-  data_train,
-  data_test;
+  Formats = [f16,f32,f64],
   current_training_minibatch = [],
   current_test_minibatch = [],
   size_minibatch::Int = 100,
   loss_f::F = Flux.mse, #Flux.crossentropy,
 ) where {T <: Chain, F <: Function}
-  d = Flux.destructure.(chain_ANN)
+  chain = [f(chain_ANN) for f in Formats]
+  d = Flux.destructure.(chain)
   rebuild = [del[2] for del in d]
   x0 = d[end][1]
   Types = eltype.([del[1] for del in d])
