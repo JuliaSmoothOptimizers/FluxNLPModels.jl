@@ -1,11 +1,11 @@
 module FluxNLPModels
 
 using Flux, NLPModels
+using Flux: onehotbatch, onecold
 export AbstractFluxNLPModel, FluxNLPModel
 export reset_minibatch_train!, reset_minibatch_test!
 export minibatch_next_train!, minibatch_next_test!
 export accuracy, set_vars!, local_loss, update_type!
-using Flux: onehotbatch, onecold
 
 abstract type AbstractFluxNLPModel{T, S} <: AbstractNLPModel{T, S} end
 
