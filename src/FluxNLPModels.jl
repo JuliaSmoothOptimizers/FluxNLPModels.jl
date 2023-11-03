@@ -1,7 +1,7 @@
 module FluxNLPModels
 
 using Flux, NLPModels
-using Flux: onehotbatch, onecold, @epochs
+using Flux: onehotbatch, onecold
 export AbstractFluxNLPModel, FluxNLPModel
 export reset_minibatch_train!, reset_minibatch_test!
 export minibatch_next_train!, minibatch_next_test!
