@@ -1,7 +1,7 @@
 # FluxNLPModels.jl
 
 ## Compatibility
-Julia ≥ 1.6.
+Julia ≥ 1.9.
 
 ## How to install
 
