@@ -67,7 +67,6 @@ device = cpu
 
   @test DNNLPModel.w == old_w
   @test obj_x1 == obj_x1_2
-  # println(norm(grad_x1 - grad_x1_2))
   @test norm(grad_x1 - grad_x1_2) ≈ 0.0
 
   @test x1 == DNNLPModel.w
@@ -141,6 +140,7 @@ end
   grad_x3 = NLPModels.grad(nlp, x3)
   @test typeof(obj_x3) == Float64
   @test eltype(grad_x3) == Float64
+  
 
   # Construct model in Float16
   train_data_f16, test_data_f16 = getdata(args, T = Float16)
@@ -167,4 +167,16 @@ end
   grad_x6 = NLPModels.grad(nlp_f16, x6)
   @test typeof(obj_x6) == Float64
   @test eltype(grad_x6) == Float64
+
+  # change to Float64 from Float16 using objgrad function 
+  x7 = Float64.(x4)
+  obj_x7 = obj(nlp_f16, x7)
+  
+  grad_x7 = NLPModels.grad(nlp_f16, x7)
+  grad_x7_2 = similar(x7)
+  obj_x7_2, grad_x7_2 = NLPModels.objgrad!(nlp_f16, x7, grad_x7_2)
+
+  @test typeof(obj_x7_2) == Float64
+  @test eltype(grad_x7_2) == Float64
+
 end

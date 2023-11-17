@@ -58,7 +58,7 @@ function FluxNLPModel(
   current_training_minibatch = [],
   current_test_minibatch = [],
   size_minibatch::Int = 100,
-  loss_f::F = Flux.crossentropy,#Flux.mse, #
+  loss_f::F = Flux.mse, #Flux.crossentropy,
 ) where {F <: Function}
   x0, rebuild = Flux.destructure(chain_ANN)
   n = length(x0)

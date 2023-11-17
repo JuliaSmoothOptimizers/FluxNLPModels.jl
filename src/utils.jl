@@ -1,22 +1,30 @@
 """
-    update_type!(nlp::AbstractFluxNLPModel{T, S}, w::AbstractVector{V}) where {T,V, S}
+    update_type!(nlp::AbstractFluxNLPModel{T, S}, w::AbstractVector{V}) where {T, V, S}
 
-
-Sets the vaiables and rebuild the chain to a sepecific type defined by weigths 
+Sets the variables and rebuild the chain to a specific type defined by weights.
 """
 function update_type!(nlp::AbstractFluxNLPModel{T, S}, w::AbstractVector{V}) where {T, V, S}
-  if V == Float16
-    local_chain = f16(nlp.chain)
-  elseif V == Float64
-    local_chain = f64(nlp.chain)
-  elseif V == Float32
-    local_chain = f32(nlp.chain)
-  else
-    error("The package only support Float16, Float32 and Float64")
-  end
-
+  local_chain = update_type(nlp.chain, V)
   nlp.chain = local_chain
   nlp.w, nlp.rebuild = Flux.destructure(nlp.chain)
+end
+
+# Define a separate method for updating the type of the chain
+function update_type(chain::Chain, ::Type{Float16})
+  return f16(chain)
+end
+
+function update_type(chain::Chain, ::Type{Float32})
+  return f32(chain)
+end
+
+function update_type(chain::Chain, ::Type{Float64})
+  return f64(chain)
+end
+
+# Throw an error for unsupported types
+function update_type(chain::Chain, ::Type)
+  error("The package only supports Float16, Float32, and Float64")
 end
 
 """

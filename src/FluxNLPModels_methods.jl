@@ -1,11 +1,11 @@
 """
     f = obj(nlp, w)
 
-Evaluate `f(w)`, the objective function of `nlp` at `w`. if `w` and `nlp` precision different, we advance to match the the type of `w`
+Evaluate `f(w)`, the objective function of `nlp` at `w`. if `w` and `nlp` precision different, we match the type of `w`
 
 # Arguments
 - `nlp::AbstractFluxNLPModel{T, S}`: the FluxNLPModel data struct;
-- `w::AbstractVector{V}`: is the vector of weights/variables. The reason for V here is to allow different precision type for weight and models 
+- `w::AbstractVector{V}`: is the vector of weights/variables. The reason for `V` here is to allow different precision type for weight and models 
 
 # Output
 - `f_w`: the new objective function.
@@ -79,6 +79,7 @@ function NLPModels.objgrad!(
   g::AbstractVector{V},
 ) where {T, S, V}
   @lencheck nlp.meta.nvar w g
+  x, y = nlp.current_training_minibatch
 
   if (eltype(nlp.w) != V)  # we check if the types are the same, 
     update_type!(nlp, w)
@@ -92,7 +93,6 @@ function NLPModels.objgrad!(
   increment!(nlp, :neval_grad)
   set_vars!(nlp, w)
 
-  x, y = nlp.current_training_minibatch
   f_w = nlp.loss_f(nlp.chain(x), y)
   g .= gradient(w_g -> local_loss(nlp, x, y, w_g), w)[1]
 
