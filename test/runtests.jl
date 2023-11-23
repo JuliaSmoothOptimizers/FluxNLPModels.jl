@@ -67,7 +67,6 @@ device = cpu
 
   @test DNNLPModel.w == old_w
   @test obj_x1 == obj_x1_2
-  # println(norm(grad_x1 - grad_x1_2))
   @test norm(grad_x1 - grad_x1_2) ≈ 0.0
 
   @test x1 == DNNLPModel.w
