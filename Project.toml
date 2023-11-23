@@ -1,7 +1,7 @@
 name = "FluxNLPModels"
 uuid = "31fab0eb-bb78-4d15-8993-a8083bba6d27"
 authors = ["Farhad Rahbarnia <farhad.rahbarnia@polymtl.ca>"]
-version = "0.2.0"
+version = "0.1.0"
 
 [deps]
 Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
