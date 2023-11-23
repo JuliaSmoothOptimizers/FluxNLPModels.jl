@@ -9,13 +9,13 @@ using MLDatasets
 using LinearAlgebra
 
 # Helper functions
-function getdata(args)
+function getdata(args; T = Float32)
   ENV["DATADEPS_ALWAYS_ACCEPT"] = "true" # download datasets without having to manually confirm the download
 
   # Loading Dataset	
 
-  xtrain, ytrain = MLDatasets.MNIST(Tx = Float32, split = :train)[:]
-  xtest, ytest = MLDatasets.MNIST(Tx = Float32, split = :test)[:]
+  xtrain, ytrain = MLDatasets.MNIST(Tx = T, split = :train)[:]
+  xtest, ytest = MLDatasets.MNIST(Tx = T, split = :test)[:]
 
   # Reshape Data in order to flatten each image into a linear array
   xtrain = Flux.flatten(xtrain)
@@ -32,7 +32,7 @@ function getdata(args)
 end
 
 function build_model(; imgsize = (28, 28, 1), nclasses = 10)
-  return Flux.Chain(Dense(prod(imgsize), 32, relu), Dense(32, nclasses))
+  return Flux.Chain(Dense(prod(imgsize), 32, relu), Dense(32, nclasses), softmax)
 end
 
 @kwdef mutable struct Args
@@ -67,7 +67,6 @@ device = cpu
 
   @test DNNLPModel.w == old_w
   @test obj_x1 == obj_x1_2
-  println(norm(grad_x1 - grad_x1_2))
   @test norm(grad_x1 - grad_x1_2) ≈ 0.0
 
   @test x1 == DNNLPModel.w
@@ -112,4 +111,81 @@ end
   reset_minibatch_test!(nlp)
   @test minibatch_next_test!(nlp) # should return true 
   @test minibatch_next_test!(nlp) # should return true 
+end
+
+@testset "Multiple precision test" begin
+  # Create test and train dataloaders
+  train_data, test_data = getdata(args)
+
+  # Construct model in Float32
+  DN = build_model() |> device
+  nlp = FluxNLPModel(DN, train_data, test_data)
+
+  x1 = copy(nlp.w)
+  obj_x1 = obj(nlp, x1)
+  grad_x1 = NLPModels.grad(nlp, x1)
+  @test typeof(obj_x1) == Float32
+  @test eltype(grad_x1) == Float32
+
+  # change to Float16 
+  x2 = Float16.(x1)
+  obj_x2 = obj(nlp, x2)
+  grad_x2 = NLPModels.grad(nlp, x2)
+  # T test grad again after changing the type, using grad! method
+  grad!(nlp, x2, grad_x2)
+  @test typeof(obj_x2) == Float16
+  @test eltype(grad_x2) == Float16
+
+  # change to Float64
+  x3 = Float64.(x1)
+  obj_x3 = obj(nlp, x3)
+  grad_x3 = NLPModels.grad(nlp, x3)
+  @test typeof(obj_x3) == Float64
+  @test eltype(grad_x3) == Float64
+
+  # change to Float16 with objgrad!
+  x3_2 = Float16.(x1)
+  grad_x3_2 = similar(x3_2)
+  obj_x3_2, grad_x3_2 = NLPModels.objgrad!(nlp, x3_2, grad_x3_2)
+  @test typeof(obj_x3_2) == Float16
+  @test eltype(grad_x3_2) == Float16
+
+  # change to Float64 with grad!
+  x3_3 = Float64.(x1)
+  grad_x3_3 = similar(x3_3)
+  grad_x3_3 = grad!(nlp, x3_3, grad_x3_3)
+  @test eltype(grad_x3_3) == Float64
+
+  # Construct model in Float16
+  train_data_f16, test_data_f16 = getdata(args, T = Float16)
+  DN_f16 = build_model() |> f16
+  nlp_f16 = FluxNLPModel(DN_f16, train_data_f16, test_data_f16)
+
+  x4 = copy(nlp_f16.w)
+  obj_x4 = obj(nlp_f16, x4)
+  grad_x4 = NLPModels.grad(nlp_f16, x4)
+
+  @test typeof(obj_x4) == Float16
+  @test eltype(grad_x4) == Float16
+
+  # change to Float32 from Float16 
+  x5 = Float32.(x4)
+  obj_x5 = obj(nlp_f16, x5)
+  grad_x5 = NLPModels.grad(nlp_f16, x5)
+  @test typeof(obj_x5) == Float32
+  @test eltype(grad_x5) == Float32
+
+  # change to Float64 from Float16 
+  x6 = Float64.(x4)
+  obj_x6 = obj(nlp_f16, x6)
+  grad_x6 = NLPModels.grad(nlp_f16, x6)
+  @test typeof(obj_x6) == Float64
+  @test eltype(grad_x6) == Float64
+
+  # change to Float32 from Float128
+  # expected to throw an error
+  # Note we do not support BigFloat in FluxNLPModels yet!
+  x7 = BigFloat.(x5)
+  @test_throws Exception obj(nlp_f16, x7)
+
 end
