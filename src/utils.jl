@@ -4,8 +4,7 @@
 Sets the variables and rebuild the chain to a specific type defined by weights.
 """
 function update_type!(nlp::AbstractFluxNLPModel{T, S}, w::AbstractVector{V}) where {T, V, S}
-  local_chain = update_type(nlp.chain, V)
-  nlp.chain = local_chain
+  nlp.chain = update_type(nlp.chain, V)
   nlp.w, nlp.rebuild = Flux.destructure(nlp.chain)
 end
 

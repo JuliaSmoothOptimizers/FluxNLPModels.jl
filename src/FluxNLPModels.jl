@@ -40,7 +40,7 @@ mutable struct FluxNLPModel{T, S, F <: Function} <: AbstractFluxNLPModel{T, S}
   rebuild # this is used to create the rebuild of flat function 
   current_training_minibatch_status
   current_test_minibatch_status
-  w::S
+  w
 end
 
 """

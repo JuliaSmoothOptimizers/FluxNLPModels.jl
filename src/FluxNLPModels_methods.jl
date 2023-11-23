@@ -1,12 +1,11 @@
 """
     f = obj(nlp, w)
 
-Evaluate `f(w)`, the objective function of `nlp` at `w`. if `w` and `nlp` precision different, we match the type of `w`
-
+    Evaluate the objective function f(w) of the non-linear programming (NLP) problem at the point w. 
+    If the precision of w and the precision expected by the nlp are different, ensure that the type of nlp.w matches the precision required by w.
 # Arguments
 - `nlp::AbstractFluxNLPModel{T, S}`: the FluxNLPModel data struct;
-- `w::AbstractVector{V}`: is the vector of weights/variables. The reason for `V` here is to allow different precision type for weight and models 
-
+- `w::AbstractVector{V}`: is the vector of weights/variables. The use of `V` allows for flexibility in specifying different precision types for weights and models.
 # Output
 - `f_w`: the new objective function.
 
@@ -31,8 +30,8 @@ Evaluate `∇f(w)`, the gradient of the objective function at `w` in place.
 
 # Arguments
 - `nlp::AbstractFluxNLPModel{T, S}`: the FluxNLPModel data struct;
-- `w::AbstractVector{T}`: is the vector of weights/variables;
-- `g::AbstractVector{T}`: the gradient vector.
+- `w::AbstractVector{V}`: is the vector of weights/variables. The use of `V` allows for flexibility in specifying different precision types for weights and models.
+- `g::AbstractVector{}`: the gradient vector.
 
 # Output
 - `g`: the gradient at point `w`.
@@ -41,8 +40,8 @@ Evaluate `∇f(w)`, the gradient of the objective function at `w` in place.
 function NLPModels.grad!(
   nlp::AbstractFluxNLPModel{T, S},
   w::AbstractVector{V},
-  g::AbstractVector{V},
-) where {T, S, V}
+  g::AbstractVector{U},
+) where {T, S, V,U}
   @lencheck nlp.meta.nvar w g
   x, y = nlp.current_training_minibatch
 
@@ -66,8 +65,8 @@ Evaluate both `f(w)`, the objective function of `nlp` at `w`, and `∇f(w)`, the
 
 # Arguments
 - `nlp::AbstractFluxNLPModel{T, S}`: the FluxNLPModel data struct;
-- `w::AbstractVector{T}`: is the vector of weights/variables;
-- `g::AbstractVector{T}`: the gradient vector.
+- `w::AbstractVector{V}`: is the vector of weights/variables. The use of `V` allows for flexibility in specifying different precision types for weights and models.
+- `g::AbstractVector{V}`: the gradient vector.
 
 # Output
 - `f_w`, `g`: the new objective function, and the gradient at point w.
@@ -76,8 +75,8 @@ Evaluate both `f(w)`, the objective function of `nlp` at `w`, and `∇f(w)`, the
 function NLPModels.objgrad!(
   nlp::AbstractFluxNLPModel{T, S},
   w::AbstractVector{V},
-  g::AbstractVector{V},
-) where {T, S, V}
+  g::AbstractVector{U},
+  ) where {T, S, V,U}
   @lencheck nlp.meta.nvar w g
   x, y = nlp.current_training_minibatch
 
