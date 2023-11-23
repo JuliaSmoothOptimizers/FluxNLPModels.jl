@@ -41,7 +41,7 @@ function NLPModels.grad!(
   nlp::AbstractFluxNLPModel{T, S},
   w::AbstractVector{V},
   g::AbstractVector{U},
-) where {T, S, V,U}
+) where {T, S, V, U}
   @lencheck nlp.meta.nvar w g
   x, y = nlp.current_training_minibatch
 
@@ -76,7 +76,7 @@ function NLPModels.objgrad!(
   nlp::AbstractFluxNLPModel{T, S},
   w::AbstractVector{V},
   g::AbstractVector{U},
-  ) where {T, S, V,U}
+) where {T, S, V, U}
   @lencheck nlp.meta.nvar w g
   x, y = nlp.current_training_minibatch
 
