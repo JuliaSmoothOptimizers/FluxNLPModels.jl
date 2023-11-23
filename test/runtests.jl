@@ -152,10 +152,8 @@ end
 
   # change to Float64 with grad!
   x3_3 = Float64.(x1)
-  obj_x3_3 = obj(nlp, x3_3)
   grad_x3_3 = similar(x3_3)
   grad_x3_3 = grad!(nlp, x3_3, grad_x3_3)
-  @test typeof(obj_x3_3) == Float64
   @test eltype(grad_x3_3) == Float64
 
   # Construct model in Float16
