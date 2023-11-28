@@ -187,5 +187,4 @@ end
   # Note we do not support BigFloat in FluxNLPModels yet!
   x7 = BigFloat.(x5)
   @test_throws Exception obj(nlp_f16, x7)
-
 end
