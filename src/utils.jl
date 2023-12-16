@@ -1,14 +1,45 @@
 """
+    update_type!(nlp::AbstractFluxNLPModel{T, S}, w::AbstractVector{V}) where {T, V, S}
+
+Sets the variables and rebuild the chain to a specific type defined by weights.
+"""
+function update_type!(nlp::AbstractFluxNLPModel{T, S}, w::AbstractVector{V}) where {T, V, S}
+  nlp.chain = update_type(nlp.chain, V)
+  nlp.w, nlp.rebuild = Flux.destructure(nlp.chain)
+end
+
+# Define a separate method for updating the type of the chain
+function update_type(chain::Chain, ::Type{Float16})
+  return f16(chain)
+end
+
+function update_type(chain::Chain, ::Type{Float32})
+  return f32(chain)
+end
+
+function update_type(chain::Chain, ::Type{Float64})
+  return f64(chain)
+end
+
+# Throw an error for unsupported types
+function update_type(chain::Chain, ::Type)
+  error("The package only supports Float16, Float32, and Float64")
+end
+
+"""
     set_vars!(model::AbstractFluxNLPModel{T,S}, new_w::AbstractVector{T}) where {T<:Number, S}
 
 Sets the vaiables and rebuild the chain
 """
-function set_vars!(nlp::AbstractFluxNLPModel{T, S}, new_w::AbstractVector{T}) where {T <: Number, S} #TODO test T 
+function set_vars!(
+  nlp::AbstractFluxNLPModel{T, S},
+  new_w::AbstractVector{V},
+) where {T <: Number, S, V}
   nlp.w .= new_w
   nlp.chain = nlp.rebuild(nlp.w)
 end
 
-function local_loss(nlp::AbstractFluxNLPModel{T, S}, x, y, w::AbstractVector{T}) where {T, S}
+function local_loss(nlp::AbstractFluxNLPModel{T, S}, x, y, w::AbstractVector{V}) where {T, S, V}
   # increment!(nlp, :neval_obj) #TODO not sure 
   nlp.chain = nlp.rebuild(w)
   return nlp.loss_f(nlp.chain(x), y)

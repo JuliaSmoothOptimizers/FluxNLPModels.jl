@@ -1,7 +1,7 @@
 name = "FluxNLPModels"
 uuid = "31fab0eb-bb78-4d15-8993-a8083bba6d27"
 authors = ["Farhad Rahbarnia <farhad.rahbarnia@polymtl.ca>"]
-version = "0.0.1"
+version = "0.2.0"
 
 [deps]
 Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
@@ -10,11 +10,11 @@ NLPModels = "a4795742-8479-5a88-8948-cc11e1c8c1a6"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [compat]
-Flux = "0.13.16"
+Flux = "0.14.6"
 MLDatasets = "0.7.9"
 NLPModels = "0.20.0"
-Zygote = "0.6.49"
-julia = "^1.6.0"
+Zygote = "0.6.60"
+julia = "^1.9.0"
 
 [extras]
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
@@ -22,4 +22,4 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["LinearAlgebra","CUDA" ,"Test"]
+test = ["LinearAlgebra", "CUDA", "Test"]

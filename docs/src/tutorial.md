@@ -1,4 +1,5 @@
 # FluxNLPModels.jl Tutorial
+
 ## Setting up 
 This step-by-step example assumes prior knowledge of [Julia](https://julialang.org/) and [Flux.jl](https://github.com/FluxML/Flux.jl).
 See the [Julia tutorial](https://julialang.org/learning/) and the [Flux.jl tutorial](https://fluxml.ai/Flux.jl/stable/models/quickstart/#man-quickstart) for more details.
@@ -28,7 +29,7 @@ We will cover the following:
 using FluxNLPModels
 using Flux, NLPModels
 using Flux.Data: DataLoader
-using Flux: onehotbatch, onecold, @epochs
+using Flux: onehotbatch, onecold
 using Flux.Losses: logitcrossentropy
 using MLDatasets
 using JSOSolvers
@@ -39,23 +40,13 @@ using JSOSolvers
 First, a NN model needs to be define in Flux.jl.
 Our model is very simple: It consists of one "hidden layer" with 32 "neurons", each connected to every input pixel. Each neuron has a sigmoid nonlinearity and is connected to every "neuron" in the output layer. Finally, softmax produces probabilities, i.e., positive numbers that add up to 1.
 
-We have two ways of defining the models:
+One can create a method that returns the model. This method can encapsulate the specific architecture and parameters of the model, making it easier to reuse and manage. It provides a convenient way to define and initialize the model when needed.
 
-1. **Direct Definition**: You can directly define the model in your code, specifying the layers and their connections using Flux's syntax. This approach allows for more flexibility and customization.
-   ```@example FluxNLPModel
-    model = Flux.Chain(Dense(28^2=> 32, relu), Dense(32=>10)) 
-   ```
-
-2. **Method-Based Definition**: Alternatively, you can create a method that returns the model. This method can encapsulate the specific architecture and parameters of the model, making it easier to reuse and manage. It provides a convenient way to define and initialize the model when needed.
-   ```@example FluxNLPModel
-    function build_model(; imgsize = (28, 28, 1), nclasses = 10)
-      return Chain(Dense(prod(imgsize), 32, relu), Dense(32, nclasses)) 
-    end
-   ```
-
-
-
-Both approaches have their advantages, and you can choose the one that suits your needs and coding style.
+```@example FluxNLPModel
+function build_model(; imgsize = (28, 28, 1), nclasses = 10)
+  return Chain(Dense(prod(imgsize), 32, relu), Dense(32, nclasses)) 
+end
+```
 
 ### Loss function
 
@@ -65,24 +56,6 @@ We can define any loss function that we need, here we use Flux build-in logitcro
 const loss = Flux.logitcrossentropy
 ```
 
-We also define a loss function `loss_and_accuracy`. 
-```@example FluxNLPModel
-  function loss_and_accuracy(data_loader, model, device)
-    acc = 0
-    ls = 0.0f0
-    num = 0
-    for (x, y) in data_loader
-      x, y = device(x), device(y)
-      ŷ = model(x)
-      ls += loss(ŷ, y, agg = sum)
-      acc += sum(onecold(ŷ) .== onecold(y)) ## Decode the output of the model
-      num += size(x)[end]
-    end
-    return ls / num, acc / num
-  end 
-```
-
-
 ### Load datasets and define minibatch 
 In this section, we will cover the process of loading datasets and defining minibatches for training your model using Flux. Loading and preprocessing data is an essential step in machine learning, as it allows you to train your model on real-world examples.
 
@@ -90,10 +63,8 @@ We will specifically focus on loading the MNIST dataset. We will divide the data
 
 Additionally, we will define minibatches, which are subsets of the dataset that are used during the training process. Minibatches enable efficient training by processing a small batch of examples at a time, instead of the entire dataset. This technique helps in managing memory resources and improving convergence speed.
 
-
-
 ```@example FluxNLPModel
-function getdata(batchsize)
+function getdata(bs)
   ENV["DATADEPS_ALWAYS_ACCEPT"] = "true"
 
   # Loading Dataset	
@@ -108,13 +79,12 @@ function getdata(batchsize)
   ytrain, ytest = onehotbatch(ytrain, 0:9), onehotbatch(ytest, 0:9)
 
   # Create DataLoaders (mini-batch iterators)
-  train_loader = DataLoader((xtrain, ytrain), batchsize = batchsize, shuffle = true)
-  test_loader = DataLoader((xtest, ytest), batchsize = batchsize)
+  train_loader = DataLoader((xtrain, ytrain), batchsize = bs, shuffle = true)
+  test_loader = DataLoader((xtest, ytest), batchsize = bs)
 
   return train_loader, test_loader
 end
 ```
-
 
 ### Transfering to FluxNLPModels
 
@@ -129,9 +99,6 @@ end
   nlp = FluxNLPModel(model, train_loader, test_loader; loss_f = loss)
 ```
 
-
-
- 
 ## Tools associated with a FluxNLPModel
 The problem dimension `n`, where `w` ∈ ℝⁿ:
 ```@example FluxNLPModel
@@ -154,4 +121,16 @@ The length of `w` must be `nlp.meta.nvar`.
 ```@example FluxNLPModel
 g = similar(w)
 NLPModels.grad!(nlp, w, g)
+```
+
+## Train a neural network with JSOSolvers.R2
+
+```@example FluxNLPModel
+max_time = 60. # run at most 1min
+callback = (nlp, 
+            solver, 
+            stats) -> FluxNLPModels.minibatch_next_train!(nlp)
+
+solver_stats = R2(nlp; callback, max_time)
+test_accuracy = FluxNLPModels.accuracy(nlp) #check the accuracy
 ```
