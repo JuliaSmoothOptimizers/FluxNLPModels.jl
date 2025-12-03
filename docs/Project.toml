@@ -9,7 +9,7 @@ NLPModels = "a4795742-8479-5a88-8948-cc11e1c8c1a6"
 [compat]
 Documenter = "1"
 Flux = "0.16.5"
-JSOSolvers = "0.10.0"
+JSOSolvers = "0.14.3"
 MLDatasets = "0.7.18"
 NLPModels = "0.21.5"
 julia = "1.10"
