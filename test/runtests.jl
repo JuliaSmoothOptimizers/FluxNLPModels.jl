@@ -1,6 +1,6 @@
 using Test
 using FluxNLPModels
-using CUDA, Flux, NLPModels
+using CUDA, cuDNN, Flux, NLPModels
 using Flux.Data: DataLoader
 using Flux: onehotbatch, onecold
 using Flux.Losses: logitcrossentropy
