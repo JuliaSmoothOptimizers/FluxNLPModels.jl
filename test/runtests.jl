@@ -1,8 +1,7 @@
 using Test
 using FluxNLPModels
 using CUDA, cuDNN, Flux, NLPModels
-using Flux.Data: DataLoader
-using Flux: onehotbatch, onecold
+using Flux: DataLoader, onehotbatch, onecold
 using Flux.Losses: logitcrossentropy
 using Base: @kwdef
 using MLDatasets
