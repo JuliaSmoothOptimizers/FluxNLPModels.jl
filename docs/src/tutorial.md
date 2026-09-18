@@ -28,8 +28,7 @@ We will cover the following:
 ```@example FluxNLPModel
 using FluxNLPModels
 using Flux, NLPModels
-using Flux.Data: DataLoader
-using Flux: onehotbatch, onecold
+using Flux: DataLoader, onehotbatch, onecold
 using Flux.Losses: logitcrossentropy
 using MLDatasets
 using JSOSolvers
